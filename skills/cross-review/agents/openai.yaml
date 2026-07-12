@@ -1,0 +1,4 @@
+interface:
+  display_name: "Cross Review"
+  short_description: "Review contracts and checkpoint phases"
+  default_prompt: "Use $cross-review to review spec and engineering conformance with a bounded fix contract per finding, then checkpoint an accepted phase when project policy requires it."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Planner"
+  short_description: "Plan architecture, boundaries, and acceptance"
+  default_prompt: "Use $feature-planner to enter the correct task branch and create a cross-review-ready plan with an Architecture Contract, stable acceptance IDs, and explicit phase boundaries."

@@ -1,0 +1,35 @@
+# Local AI coding workflow files
+.agents/
+.claude/
+.zcode/
+.agent-workflow/
+.codex/
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+CONTEXT.md
+ENGINEERING_STANDARDS.md
+
+# Local environments and secrets
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Generated and temporary files
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+*.bak
+artifacts/
+outputs/
+scratch/
+tmp/
+
+# Editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

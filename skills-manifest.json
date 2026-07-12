@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "skills": [
+    {
+      "name": "agent-guidelines-init",
+      "path": "skills/agent-guidelines-init"
+    },
+    {
+      "name": "apply-review-fix",
+      "path": "skills/apply-review-fix"
+    },
+    {
+      "name": "cross-review",
+      "path": "skills/cross-review"
+    },
+    {
+      "name": "feature-implementer",
+      "path": "skills/feature-implementer"
+    },
+    {
+      "name": "feature-planner",
+      "path": "skills/feature-planner"
+    },
+    {
+      "name": "module-introduction",
+      "path": "skills/module-introduction"
+    }
+  ]
+}

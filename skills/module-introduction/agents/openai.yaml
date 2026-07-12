@@ -1,0 +1,4 @@
+interface:
+  display_name: "中文模块完整介绍"
+  short_description: "生成可追溯的中文模块架构、参数来源、代码实现及验证文档"
+  default_prompt: "使用 $module-introduction 基于仓库证据编写一份中文模块完整介绍，逐项说明架构、参数来源、关键代码实现，并在必要时生成和嵌入架构图。"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature Implementer"
+  short_description: "Implement accepted architecture contracts"
+  default_prompt: "Use $feature-implementer to pass branch and review gates, implement the accepted phase boundary, and return architecture conformance evidence pending cross-review."

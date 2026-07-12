@@ -1,0 +1,4 @@
+interface:
+  display_name: "Apply Review Fix"
+  short_description: "Repair findings without architecture drift"
+  default_prompt: "Use $apply-review-fix on the reviewed task branch to apply these Finding IDs within their architecture and scope boundaries, then return closure evidence."
