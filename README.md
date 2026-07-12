@@ -493,8 +493,9 @@ GitHub Actions 在 `main` push 和所有 pull request 上运行相同验证。
 
 ### 9. License
 
-本仓库目前尚未选择开源许可证。公开可见不等于自动授予复制、修改或再分发
-权限；在添加明确的 `LICENSE` 前，请联系仓库所有者获得授权。
+本仓库采用 [MIT License](LICENSE) 开源。你可以使用、复制、修改、合并、
+发布和再分发这些技能，但必须在副本或重要部分中保留原版权和许可声明。
+软件按“原样”提供，不附带任何明示或暗示担保。
 
 ---
 
@@ -801,9 +802,10 @@ same checks on pushes to `main` and on pull requests.
 
 ### 9. License
 
-No open-source license has been selected yet. Public visibility does not by
-itself grant permission to copy, modify, or redistribute this repository.
-Contact the repository owner until an explicit `LICENSE` is added.
+This repository is released under the [MIT License](LICENSE). You may use,
+copy, modify, merge, publish, and redistribute these skills, provided that the
+copyright and permission notice remains in copies or substantial portions.
+The software is provided as-is, without warranty of any kind.
 
 ---
 

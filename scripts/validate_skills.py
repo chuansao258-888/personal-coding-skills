@@ -144,6 +144,7 @@ def main() -> int:
 
     repository_files = [
         repo_root / "README.md",
+        repo_root / "LICENSE",
         repo_root / "skills-manifest.json",
         repo_root / ".github" / "workflows" / "validate-skills.yml",
         *sorted((repo_root / "scripts").glob("*")),
