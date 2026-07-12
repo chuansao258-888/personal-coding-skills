@@ -1,4 +1,4 @@
 interface:
   display_name: "Agent Guidelines Init"
-  short_description: "Initialize Git and generate AGENTS.md"
-  default_prompt: "Use $agent-guidelines-init to initialize Git when absent, audit AI-coding .gitignore rules, and update AGENTS.md with engineering, branch, knowledge, review, and phase-checkpoint gates."
+  short_description: "Initialize Git, clean-code standards, and AGENTS.md"
+  default_prompt: "Use $agent-guidelines-init to initialize Git when absent, generate or merge an English ENGINEERING_STANDARDS.md with stack-specific Clean Code rules, audit AI-coding file policy, and update AGENTS.md to cite stable rule IDs."

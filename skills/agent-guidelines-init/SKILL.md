@@ -1,24 +1,34 @@
 ---
 name: agent-guidelines-init
-description: Initialize repository Git when absent, audit local AI-coding ignore rules, and generate or update a repository-level AGENTS.md guide. Use for repository setup, engineering standards, project knowledge/pitfall ledgers, task-branch gates, accepted-phase commits, review closure, documentation pairing, git hygiene, or skill routing.
+description: Initialize repository Git when absent, audit local AI-coding ignore rules, generate or merge an English ENGINEERING_STANDARDS.md with stable Clean Code rule IDs, and create or update repository-level AGENTS.md guidance. Use for repository setup, code readability and cleanliness standards, project knowledge/pitfall ledgers, task-branch gates, accepted-phase commits, review closure, documentation pairing, git hygiene, or skill routing.
 ---
 
 # Agent Guidelines Init
 
-Use this skill to create or update `AGENTS.md` in the current repository. The output should make the repository self-describing for future coding agents and contributors.
+Use this skill to create or update `ENGINEERING_STANDARDS.md` and `AGENTS.md` in
+the current repository. The output should make the repository self-describing
+for future coding agents and contributors.
 
-This skill is an initializer, not a daily workflow tool. It writes project-level guidance into `AGENTS.md`; later planner, implementer, reviewer, and fixer skills should read that file as the local source of truth.
+This skill is an initializer, not a daily workflow tool. It keeps detailed,
+stable code-quality rules in `ENGINEERING_STANDARDS.md` and operational project
+guidance in `AGENTS.md`; later planner, implementer, reviewer, and fixer skills
+read both as local sources of truth.
 
 ## Core Rules
 
 - Inspect the repository before writing. Do not generate a generic template blindly.
 - Preserve existing useful `AGENTS.md` rules and merge changes instead of overwriting them.
-- Keep project-specific rules in `AGENTS.md`; keep reusable execution behavior in global skills only when it cannot be expressed as repository guidance.
-- When the repository has a substantial architecture/consistency standard, keep
-  one canonical project-level source instead of duplicating the full policy.
-  Treat `ENGINEERING_STANDARDS.md` as local AI workflow guidance by default and
-  ignore it; an existing intentionally tracked team standard is a reported
-  exception, not something this skill untracks automatically.
+- Keep operational project guidance in `AGENTS.md`; keep detailed code-quality,
+  readability, logic, architecture, testing, and change rules in one canonical
+  `ENGINEERING_STANDARDS.md`.
+- When no canonical standard exists and the repository contains code, scripts,
+  schemas, automation, or a non-trivial engineering workflow, create one from
+  [the English template](assets/ENGINEERING_STANDARDS.template.md).
+- Treat a shared, public, or team engineering standard as tracked repository
+  policy by default. Ignore it only when the user or repository explicitly
+  classifies it as personal local guidance.
+- Never duplicate the full standard in `AGENTS.md`, plans, or global skills.
+  Those surfaces cite stable rule IDs and record task-specific evidence.
 - Do not add local `.agents/skills` unless the user explicitly asks for project-local skills.
 - If the repository policy says completed phases must be committed, include that rule in `AGENTS.md`; still do not push or open PRs unless the user explicitly asks.
 - Keep secrets, private config values, local tokens, and raw sensitive payloads out of the file.
@@ -63,7 +73,6 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 CONTEXT.md
-ENGINEERING_STANDARDS.md
 ```
 
 Also scan for present local tool-state paths such as `.cursor/`, `.windsurf/`,
@@ -85,12 +94,46 @@ Verify directory rules with probe paths and file rules directly, for example:
 git check-ignore -v --no-index .agents/__probe__
 git check-ignore -v --no-index .codex/__probe__
 git check-ignore -v --no-index AGENTS.md
-git check-ignore -v --no-index ENGINEERING_STANDARDS.md
 ```
 
 The gate passes only when every baseline path is covered by `.gitignore` or is
 reported as an intentional tracked exception, and each detected local tool-state
 path is either ignored or reported as intentionally shared.
+
+Handle `ENGINEERING_STANDARDS.md` separately: a shared standard must not be
+ignored; an explicitly local standard must have a verified ignore rule.
+
+## Engineering Standards Creation Gate
+
+Run this gate after repository discovery and before generating `AGENTS.md`.
+
+1. Search for an existing canonical engineering, coding-style, architecture,
+   or contributor standard and identify whether it is tracked, shared, or local.
+2. If `ENGINEERING_STANDARDS.md` or an equivalent canonical standard exists,
+   preserve its stable IDs and project-specific rules. Merge only evidenced
+   missing coverage; never replace the file with the template wholesale.
+3. If no canonical standard exists and the repository contains code, scripts,
+   schemas, automation, or a non-trivial engineering workflow, copy
+   `assets/ENGINEERING_STANDARDS.template.md` to the repository root as
+   `ENGINEERING_STANDARDS.md`.
+4. Replace every template placeholder from repository evidence. Keep the core
+   Clean Code rule IDs stable, remove language sections that do not apply, and
+   add concrete language/framework rules for the detected stack.
+5. Ensure the standard covers readable control flow, low nesting, cohesive
+   responsibilities, meaningful naming, useful comments, explicit logic and
+   outcomes, minimal abstractions, errors, tests, security, documentation,
+   cleanup, and verification evidence.
+6. Track the standard when it is intended for contributors, a team, a public
+   repository, or CI. Ignore it only when the user explicitly wants personal
+   local policy; record that decision in `AGENTS.md`.
+7. Make `AGENTS.md` point to the repository-local canonical file and require
+   planners, implementers, reviewers, and fixers to cite its stable rule IDs.
+8. Verify that no placeholder remains, rule IDs are unique, relative links are
+   valid, and the selected language profile matches actual repository files.
+
+Do not make a target repository depend on the installed skill's asset path at
+runtime. The asset is a generation source; the repository-local standard is the
+authoritative output.
 
 ## Discovery
 
@@ -144,9 +187,10 @@ Include the repository's actual:
 - Important docs or ADRs to read before planning or editing.
 - Directory map for source, tests, docs, schemas, examples, assets, generated outputs, and local artifacts.
 - Build, test, lint, format, schema, or validation commands that exist.
-- Coding style, naming patterns, framework conventions, and file placement rules.
-- The canonical architecture/consistency standard and its stable rule IDs, or a
-  concise repository-specific subset when no separate standard is warranted.
+- A pointer to the canonical `ENGINEERING_STANDARDS.md`, its tracking policy,
+  and the stable rule IDs that later workflow skills must cite.
+- A concise operational summary of coding style, naming, framework, testing,
+  and file-placement rules; keep the full rule text in the canonical standard.
 - Testing conventions and minimum verification before handoff.
 - Documentation localization or pairing rules when the repo has them.
 - A rule that project documents must be updated in every required language when the repository has bilingual or localized documentation.
@@ -257,12 +301,16 @@ When a repository wants local instructions for developing reusable skills, write
 
 ## Embedded Repo Standards
 
-Write these rules into `AGENTS.md` when applicable:
+Write a concise pointer and operational summary into `AGENTS.md`; keep detailed
+rules in `ENGINEERING_STANDARDS.md`:
 
 - Read the canonical engineering standard before non-trivial planning,
   implementation, review, or repair. Plans provide an Architecture Contract;
   implementations provide Architecture Conformance Evidence; reviews cite
   stable rule IDs.
+- Apply the standard's Clean Code rules for readable control flow, low nesting,
+  cohesive responsibilities, meaningful naming, useful comments, explicit
+  outcomes, minimal abstractions, behavior-focused tests, and cleanup.
 - Keep business capabilities cohesive, dependency direction acyclic, important
   state and business-rule authority explicit, public surfaces minimal, failure
   semantics distinguishable, and changes local. Require present-value
@@ -315,13 +363,20 @@ git diff --check -- AGENTS.md
 git check-ignore -v --no-index .agents/__probe__
 git check-ignore -v --no-index .codex/__probe__
 git check-ignore -v --no-index AGENTS.md
-git check-ignore -v --no-index ENGINEERING_STANDARDS.md
+Test-Path .\ENGINEERING_STANDARDS.md
+Select-String -Path .\ENGINEERING_STANDARDS.md -Pattern '<[A-Z0-9_]+>'
 ```
+
+For a shared standard, verify `git check-ignore --no-index
+ENGINEERING_STANDARDS.md` returns no ignore match. For an explicitly local
+standard, require and report the matching ignore rule instead.
 
 Also check:
 
 - Markdown fence balance if code blocks were changed.
 - Local links when docs were linked.
+- Stable engineering rule IDs are unique and no template placeholder remains.
+- The selected language profile matches detected source, scripts, and config.
 - `.gitignore` baseline coverage even when no new local directory was created.
 - detected local AI tool-state paths and tracked exceptions.
 - `git status --short --branch` to report remaining state.
@@ -333,7 +388,10 @@ Report:
 - Whether the target was already a repository or `git init` was run, and the
   verified repository root.
 - AI-coding `.gitignore` coverage added/preserved and any tracked exceptions.
-- Whether `AGENTS.md` was created or updated.
+- Whether `ENGINEERING_STANDARDS.md` was created or merged, which language
+  profile was selected, and whether the file is tracked or local.
+- Whether `AGENTS.md` was created or updated and points to the canonical
+  standard.
 - Key rules added or preserved.
 - Any commands or conventions that could not be discovered.
 - Validation run.

@@ -14,6 +14,39 @@ LINK_RE = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 KEY_RE = re.compile(r"^([A-Za-z0-9_-]+):\s*(.*)$")
 PRIVATE_WINDOWS_PATH_RE = re.compile(r"[A-Za-z]:\\Users\\[^\\\r\n]+\\")
+RULE_ID_RE = re.compile(r"^### ([A-Z][A-Z0-9]*-[0-9]{2})\b", re.MULTILINE)
+PROJECT_PLACEHOLDER_RE = re.compile(r"<[A-Z][A-Z0-9_]+>")
+REQUIRED_STANDARD_RULE_IDS = {
+    "CLEAN-01",
+    "CLEAN-02",
+    "CLEAN-03",
+    "CLEAN-04",
+    "CLEAN-05",
+    "CLEAN-06",
+    "LOGIC-01",
+    "LOGIC-02",
+    "LOGIC-03",
+    "SIMP-01",
+    "SIMP-02",
+    "SIMP-03",
+    "ARC-01",
+    "ARC-02",
+    "ARC-03",
+    "CONS-01",
+    "CONS-02",
+    "ERR-01",
+    "ERR-02",
+    "ERR-03",
+    "TEST-01",
+    "TEST-02",
+    "TEST-03",
+    "SEC-01",
+    "OBS-01",
+    "DOC-01",
+    "CHANGE-01",
+    "CHANGE-02",
+    "EVID-01",
+}
 
 
 def fail(errors: list[str], message: str) -> None:
@@ -62,6 +95,25 @@ def check_relative_links(path: Path, text: str, errors: list[str]) -> None:
         resolved = (path.parent / target_path).resolve()
         if not resolved.exists():
             fail(errors, f"{path}: broken relative link {target!r}")
+
+
+def check_engineering_standard(
+    path: Path,
+    text: str,
+    errors: list[str],
+    *,
+    allow_project_placeholders: bool,
+) -> None:
+    rule_ids = RULE_ID_RE.findall(text)
+    duplicate_ids = sorted({rule_id for rule_id in rule_ids if rule_ids.count(rule_id) > 1})
+    if duplicate_ids:
+        fail(errors, f"{path}: duplicate rule IDs: {duplicate_ids}")
+    missing_ids = sorted(REQUIRED_STANDARD_RULE_IDS.difference(rule_ids))
+    if missing_ids:
+        fail(errors, f"{path}: missing required rule IDs: {missing_ids}")
+    placeholders = sorted(set(PROJECT_PLACEHOLDER_RE.findall(text)))
+    if placeholders and not allow_project_placeholders:
+        fail(errors, f"{path}: unresolved project placeholders: {placeholders}")
 
 
 def main() -> int:
@@ -145,6 +197,7 @@ def main() -> int:
     repository_files = [
         repo_root / "README.md",
         repo_root / "LICENSE",
+        repo_root / "ENGINEERING_STANDARDS.md",
         repo_root / "skills-manifest.json",
         repo_root / ".github" / "workflows" / "validate-skills.yml",
         *sorted((repo_root / "scripts").glob("*")),
@@ -159,6 +212,34 @@ def main() -> int:
         check_trailing_whitespace(file_path, file_text, errors)
         if file_path.suffix.lower() == ".md":
             check_relative_links(file_path, file_text, errors)
+
+    standard_path = repo_root / "ENGINEERING_STANDARDS.md"
+    standard_text = read_utf8(standard_path, errors) if standard_path.is_file() else None
+    if standard_text is not None:
+        check_engineering_standard(
+            standard_path,
+            standard_text,
+            errors,
+            allow_project_placeholders=False,
+        )
+
+    template_path = (
+        repo_root
+        / "skills"
+        / "agent-guidelines-init"
+        / "assets"
+        / "ENGINEERING_STANDARDS.template.md"
+    )
+    template_text = read_utf8(template_path, errors) if template_path.is_file() else None
+    if template_text is None:
+        fail(errors, f"{template_path}: required standards template is missing")
+    else:
+        check_engineering_standard(
+            template_path,
+            template_text,
+            errors,
+            allow_project_placeholders=True,
+        )
 
     if errors:
         print("Skill validation failed:", file=sys.stderr)
