@@ -1,6 +1,6 @@
 ---
 name: module-introduction
-description: Use when creating or updating a module introduction, architecture walkthrough, module README, onboarding guide, implementation explanation, or interview note in any repository. Produce an evidence-based Chinese document that completely covers the scoped module's architecture, design decisions, runtime workflow, special code mechanisms, APIs, data, configuration and parameter provenance, failure behavior, verification, and limitations; use Codex ImageGen and embed a repository-local architecture image when visualization materially improves understanding.
+description: Use when creating or updating a module introduction, architecture walkthrough, module README, onboarding guide, implementation explanation, technical interview guide, or interview answers in any repository. Produce an evidence-based Chinese document that completely covers the scoped module's architecture, design and technology choices, runtime workflow, special code mechanisms, APIs, data, configuration and parameter provenance, failure behavior, verification, trade-offs, shortcomings, and future evolution; explain why each design, stack, algorithm, parameter, and implementation approach was chosen, compare realistic alternatives without inventing history, and use Codex ImageGen to embed a repository-local architecture image when visualization materially improves understanding.
 ---
 
 # 模块完整介绍
@@ -15,6 +15,8 @@ description: Use when creating or updating a module introduction, architecture w
 - 区分代码事实、运行产物、文档决策、推断和未验证项。禁止把计划、历史实验、取消工作或未执行检查写成已完成能力。
 - 不泄露密钥、令牌、真实连接串、私有地址、用户数据、模型原始载荷或秘密配置值。秘密参数只写变量名、用途、来源层级和脱敏状态。
 - 代码引用要精确到文件和符号；必要时引用短小的方法签名、枚举、不变量、SQL/Lua 片段。不要粘贴整类、整文件或大段受保护内容。
+- 面试章节必须同时包含问题与可直接口述的答案，不得只给问题清单。回答要覆盖“结论、如何实现、为什么、遇到的困难与解决过程、替代方案、取舍、短板、改进触发条件和证据”，并能承受逐层追问。
+- 区分“当时明确记录的选择理由”“根据当前实现推断的约束”“现在回看仍然合适的理由”。不得把事后合理化写成历史事实，也不得把仓库继承的技术栈冒充模块自己的选型。
 - 保留用户范围，不借模块介绍扩大成代码重构、架构改造或未经请求的实现工作。
 
 ## 强制工作流
@@ -65,6 +67,15 @@ description: Use when creating or updating a module introduction, architecture w
 - 外部系统、缓存、数据库、消息系统和模型/供应商边界；
 - 关键设计取舍、已知替代方案及其证据。若源代码未记录选择原因，标为“推断”或“未记录”，不要编造。
 
+对每个重要架构、技术栈、库、模式、算法或基础设施选择建立“决策解释”：
+
+```text
+问题与约束 -> 候选方案 -> 采用方案 -> 决定性理由
+             -> 获得的收益 -> 主动承担的代价 -> 当前短板 -> 重新评估触发条件
+```
+
+说明该选择是模块主动决定、仓库既有约束、组织/部署约束、供应商协议要求，还是来源未记录。仅在仓库存在评分、权重或 benchmark 证据时使用数值评分；否则按一致的定性维度比较，不伪造精确分数。
+
 ### 4. 逐项追踪参数来源
 
 对模块边界内所有影响行为的参数建立“参数来源与生效链路表”。包括但不限于：布尔开关、枚举、阈值、权重、超时、重试、批大小、并发度、队列容量、缓存 TTL、模型名、采样参数、token 限制、检索数量、分块尺寸、排序分数、调度周期、分页限制、端口、路径和安全策略。
@@ -95,6 +106,8 @@ description: Use when creating or updating a module introduction, architecture w
 
 对于硬编码常量，也要说明设定位置和可找到的来源：测试契约、协议限制、供应商文档、历史 ADR、经验性选择或“仓库未记录依据”。不要把代码中的数字自动解释成行业最佳值。
 
+面试回答中额外说明：为什么需要这个参数、为什么采用当前默认值或范围、调大/调小的收益与风险、什么指标或事故会触发重新调参。没有实验或 ADR 证据时，明确说“默认值依据未记录”，再给出可验证的调参方案，不能虚构压测结论。
+
 ### 5. 深挖特殊代码实现
 
 对决定模块差异化行为、可靠性或性能的代码逐项解释，而不是只列类名。每个关键机制说明：
@@ -108,6 +121,8 @@ description: Use when creating or updating a module introduction, architecture w
 - provider/格式专用解析、缓冲、提交/丢弃语义；
 - 关键参数如何进入该机制；
 - 对应测试如何覆盖成功、边界和失败分支。
+
+解释实现理由时使用“约束 → 机制 → 可观察结果 → 代价”的链条。例如，不只说“使用队列解耦”，还要说明同步方案遇到的具体约束、队列在哪个方法或配置接入、如何改变延迟/可靠性/一致性，以及新增了哪些运维与失败恢复成本。若选择理由没有直接证据，降级为带依据的推断。
 
 优先用“代码深挖表”组织：`机制 / 权威符号 / 调用路径 / 核心步骤 / 状态或并发 / 参数 / 异常语义 / 测试证据`。若短代码比文字更清楚，只引用证明机制所需的最小片段并逐行解释。
 
@@ -158,15 +173,47 @@ description: Use when creating or updating a module introduction, architecture w
 
 若 ImageGen 未暴露、生成失败或无法取得可持久化文件，诚实记录原因，保留 Mermaid 和可复用的 `ImageGen prompt`。不得声称图片已生成，不得让仓库文档引用临时目录、会话 URL 或 `$CODEX_HOME/generated_images`。
 
-### 7. 编写中文文档
+### 7. 构建可追问的面试问题与答案
+
+需要面试说明、技术复盘或默认文档模板中的面试章节时，完整读取并执行 [面试问答证据与题库](references/interview-answer-contract.md)。不要只复制题目；必须结合当前模块证据逐题生成答案。
+
+先从模块的权威代码、ADR、测试、配置、故障路径和限制反向生成问题，再按以下结构回答每个核心问题：
+
+1. **一句话结论**：先直接回答，不绕背景。
+2. **问题与约束**：当时或当前必须解决什么；哪些约束有直接证据。
+3. **架构/实现落点**：点名组件、方法、数据结构、参数和真实调用链。
+4. **为什么这样选/这样实现**：连接约束、机制与结果；标注是代码事实、文档决策还是推断。
+5. **候选方案与选择依据**：比较真实可行的替代方案；说明为何未选。不得编造未发生的 POC、评分或 benchmark。
+6. **收益、取舍与短板**：同时说明获得什么、付出什么、在哪些流量/故障/数据规模下会暴露限制。
+7. **未来提升**：给出触发信号、最小演进路径、兼容/迁移风险和验证指标；不要把建议写成已经批准的路线图。
+8. **证据与置信度**：给出路径和符号，使用 `明确记录 | 代码推断 | 未记录`。
+9. **可能追问**：列 1–3 个自然追问，并准备可继续下钻的事实。
+
+对“你遇到了什么困难、如何解决”类问题，使用 `背景/目标 → 可观察症状 → 约束 → 诊断过程 → 根因 → 采取行动 → 验证结果 → 复盘`。只写有证据的排查步骤、失败尝试、结果和个人职责；不得根据最终代码倒推出一段虚构的开发故事。若仓库只能证明技术难点和最终机制，写成“该实现需要解决的难点”，将个人经历、实际尝试和贡献标为待用户确认。
+
+同时提供至少两种口述深度：`30 秒回答` 用于结论和核心取舍，`2 分钟回答` 用于调用链、选择依据、短板和演进。对模块最关键的 3–5 个问题再提供 `深挖回答`，能够解释到方法、参数、状态、并发/事务和失败窗口。
+
+问题至少覆盖以下适用面；不适用时说明证据，不要硬凑答案：
+
+- 系统上下文、整体架构、边界、职责、依赖方向和状态所有者；
+- 技术栈、框架、库、存储、消息、缓存、协议、设计模式和算法选择；
+- 核心调用链、特殊实现、数据结构、并发、事务、一致性、幂等和失败恢复；
+- 开发或运行中可验证的难点、症状、诊断假设、根因、解决动作、回归验证和复盘；
+- API、数据模型、配置和关键参数的来源、默认依据、覆盖顺序与调优影响；
+- 性能、容量、成本、安全、隐私、可观测性和测试策略；
+- 被拒绝或未采用的方案、当前取舍、短板、适用边界和未来演进。
+
+技术选型对比使用相同维度，例如正确性、复杂度、延迟、吞吐、一致性、可恢复性、成本、运维负担、团队与仓库一致性、可测试性和迁移风险。只有与本模块相关的维度才进入回答。若选择主要因为仓库既有技术栈，应如实说明复用收益和锁定成本，不包装成从零选型。
+
+### 8. 编写中文文档
 
 除非用户指定其他结构，使用以下章节：
 
 1. **标题、范围与状态**：受众、边界、当前/历史/计划状态、明确排除项。
-2. **一句话定位与面试表达**：30 秒、2 分钟版本及需要记住的事实/数字。
+2. **一句话定位与面试表达**：30 秒、2 分钟版本及需要记住且有证据的事实/数字。
 3. **问题、目标与非目标**：模块为何存在，成功标准是什么。
 4. **整体架构**：组件、职责、所有权、依赖方向、主架构图片与 Mermaid。
-5. **设计与技术选型**：框架、库、模式、选择理由、代价和已记录的替代方案。
+5. **设计与技术选型**：框架、库、模式、算法、选择所有者、约束、候选方案、选择理由、收益、代价和证据等级。
 6. **端到端运行流程**：正常、空结果、拒绝、异常、重试、降级、取消和清理。
 7. **接口与契约**：HTTP/事件/服务入口表，认证、DTO、字段、返回和错误语义。
 8. **数据模型与持久化**：实体、表、索引、约束、迁移、Mapper/SQL、生命周期和幂等。
@@ -174,9 +221,9 @@ description: Use when creating or updating a module introduction, architecture w
 10. **关键代码实现深挖**：类、方法、调用链、算法、状态机、并发、事务和短代码解释。
 11. **可靠性、安全与可观测性**：超时、重试、熔断、锁、隐私、日志、指标和健康检查。
 12. **验证与实际结果**：实际执行的命令、测试、产物、指标、失败诊断和 review 结果。
-13. **限制、风险与未验证项**：不证明什么、剩余风险、缺失证据。
-14. **扩展指南**：新增 parser/provider/consumer/route/rule 的落点和必须补充的测试。
-15. **面试追问与回答**：围绕取舍、实现、故障和扩展给出简洁答案。
+13. **限制、风险与未验证项**：不证明什么、剩余风险、适用边界、短板和缺失证据。
+14. **未来演进与扩展指南**：改进触发条件、候选路径、迁移/兼容代价、验证指标，以及新增 parser/provider/consumer/route/rule 的落点和测试。
+15. **面试问题、回答与连续追问**：覆盖架构、选型、实现、参数、工程难点与解决过程、故障、取舍、短板和演进，提供 30 秒、2 分钟和核心问题深挖版本。
 16. **覆盖台账与参考索引**：全部已验证路径、符号、测试、配置、迁移、产物和命令。
 
 小模块可以合并相邻章节，但不得删掉适用信息。无持久化、无异步或无外部配置时，明确写“不适用”并给出搜索证据，不要静默省略。
@@ -202,6 +249,9 @@ description: Use when creating or updating a module introduction, architecture w
 - 接口、数据、配置、代码、并发、事务、异常、安全、观测、测试和扩展面都已处理或明确写“不适用”。
 - 每个行为参数都有来源、默认依据、覆盖顺序、绑定/校验、消费者、单位和影响；秘密值没有泄露。
 - 每个特殊机制都解释到方法、分支、状态、原语和失败语义，并连接测试证据。
+- 每个重要设计/技术/算法选择都有约束、候选方案、选择来源、收益、代价、短板和重新评估条件；历史事实与当前推断已分开。
+- 面试章节不是裸题库；每个核心问题都有可口述答案、证据等级、自然追问和至少两种回答深度。
+- “遇到困难并解决”类答案区分可验证的技术挑战、项目历史和个人贡献，包含症状、诊断、根因、行动、验证与复盘，不虚构开发经历。
 - 所有引用路径和符号已用 `rg`、`Test-Path` 或等价命令验证存在；删除陈旧引用。
 - 图片只在有信息价值时生成；生成图已视觉检查、复制到仓库、相对路径嵌入且保留 Mermaid。
 - 未运行的测试、E2E、benchmark、live provider 或图片生成没有被写成已完成。
