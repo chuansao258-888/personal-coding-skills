@@ -88,6 +88,8 @@ description: Use when creating or updating a module introduction, architecture w
 
 对关键输入、状态和失败信号，不能停在内部回调或中间对象；必须继续追踪到控制流、持久化、用户可见输出、日志/指标和恢复结果。区分 transport、business、persistence 与 user-visible success。存在异步、并发、租约、事务外副作用或多个终止信号时，按 [模块文档完整性复核契约](references/completeness-review-contract.md) 建立事件顺序/竞态矩阵，至少验证 `A→B` 与 `B→A`。
 
+初稿完成后还必须执行完整性契约的“符号、绑定、指标与传输语义核对”：逐字验证文档中的类/方法/key；区分 YAML 字面默认值、placeholder、Spring relaxed binding 与运行有效值；从 meter 注册追到所有记录调用点；把 publish、ACK、NACK、reject、requeue 和 DLQ 的实际顺序写清。不能用框架惯例或理想 schema 补齐代码没有证明的标签、字段或终局。
+
 架构章节必须列出：
 
 - 组件职责与所有权；

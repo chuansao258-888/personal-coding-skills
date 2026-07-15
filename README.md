@@ -253,6 +253,9 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 - 深挖实际方法、分支、状态机、并发原语、事务边界、重试、取消和清理；
 - 把关键内部状态继续追到控制流、持久化、用户可见结果与日志/指标，区分
   transport、business、persistence 和 user-visible success；
+- 初稿后逐字核对类/方法/key，区分 YAML 字面值、placeholder 与 relaxed
+  binding，从 meter 注册追到所有记录点，并写清 publish、ACK、NACK、reject、
+  requeue 和 DLQ 的真实终局；
 - 复算所有“最多/至少/默认/总预算”数字的循环边界、首次尝试、共享预算、
   单位换算和 timer 范围，并检查异步信号反序时的竞态窗口；
 - 对评测与 benchmark 分开生产链和评测链，核实数据集、judge/evaluator、指标
@@ -689,7 +692,10 @@ cleanup. It follows critical internal states through control flow, persistence,
 user-visible output, and operational signals instead of equating an internal
 callback with final success. It also recalculates retry/repair counts, derived
 deadlines, unit conversions, and loop boundaries, and audits reversed event
-orders for observable race windows. Current-state claims require independent confirmation from reachable
+orders for observable race windows. After drafting, it verifies every named
+class, method, key, configuration binding mechanism, meter registration and
+recording call, and the exact publish/ACK/NACK/reject/requeue/DLQ terminal
+semantics instead of relying on framework convention. Current-state claims require independent confirmation from reachable
 code, configuration, migrations, tests, or current runtime artifacts; decision
 and history claims may use document evidence. Unverified work remains explicitly
 labeled.
