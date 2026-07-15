@@ -88,7 +88,7 @@ description: Use when creating or updating a module introduction, architecture w
 
 对关键输入、状态和失败信号，不能停在内部回调或中间对象；必须继续追踪到控制流、持久化、用户可见输出、日志/指标和恢复结果。区分 transport、business、persistence 与 user-visible success。存在异步、并发、租约、事务外副作用或多个终止信号时，按 [模块文档完整性复核契约](references/completeness-review-contract.md) 建立事件顺序/竞态矩阵，至少验证 `A→B` 与 `B→A`。
 
-初稿完成后还必须执行完整性契约的“符号、绑定、指标与传输语义核对”：逐字验证文档中的类/方法/key；区分 YAML 字面默认值、placeholder、Spring relaxed binding 与运行有效值；从 meter 注册追到所有记录调用点；把 publish、ACK、NACK、reject、requeue 和 DLQ 的实际顺序写清。不能用框架惯例或理想 schema 补齐代码没有证明的标签、字段或终局。
+初稿完成后还必须执行完整性契约的“符号、绑定、指标与传输语义核对”：逐字验证文档中的类/方法/key；区分 YAML 字面默认值、placeholder、Spring relaxed binding 与运行有效值；从 meter 注册追到所有记录调用点；把 publish、ACK、NACK、reject、requeue 和 DLQ 的实际顺序写清。凡 adapter/descriptor 声称 deadline 或 timeout 已执行，必须追到实际阻塞/异步 transport，确认剩余 deadline 进入 per-request timeout、取消或中断，而不是只在调用前后读取时间。凡声称 response/body/file 有大小上限，必须说明限制发生在读取前、流式读取中还是完整缓冲后，以及单位是 bytes、chars、items 还是 tokens。不能用框架惯例或理想 schema 补齐代码没有证明的标签、字段或终局。
 
 架构章节必须列出：
 
@@ -140,6 +140,12 @@ description: Use when creating or updating a module introduction, architecture w
 
 所有“最多/至少/总计/默认 N 次（秒、条、token）”必须继续核对算式、循环边界、单位转换和 timer 范围；明确首次尝试是否计数、retry/repair/fallback 是否共享预算、超时是单 attempt 还是全局 deadline。需要时使用完整性复核契约中的“数字、计数与派生时间审计表”。
 
+凡参数或方法名包含 `attempt/retry/maxRetries/maxAttempts`，正文必须同时给出“首次是否计数、重试计数如何递增、终止比较符、最多总执行次数”的可复算公式。例如代码返回 `maxRetryCount=3` 且在 `retryCount >= 3` 时停止，不能只写“最多 3 次”；要说明它是 3 次显式重试，连同首次最多 4 次处理。名称、注释与实际循环不一致时，以控制流为准并登记漂移。
+
+常量值不能直接替代运行语义。若常量为 `MAX_*_ATTEMPTS=N`，继续追踪初始调用使用的 attempt 值、递归/循环递增点、终止 guard 是否仍执行、最后一次是否跳过校验，以及“额外重试数”和“包含首次的总执行数”。正文至少给出 `初始执行 1 次 + 允许追加 N 次 = 最多 N+1 次` 或代码实际对应的公式；图片、参数表、失败矩阵和面试答案必须使用同一口径。
+
+凡计数器名包含 `actual/real/success/complete/dispatched/inserted` 等强语义，不能按名称解释。必须定位每个 increment/write 调用点，并核对它发生在查重、预算、CAS、callback、事务提交和最终 consumer 的哪一侧。若“actual dispatch”在 callback 前甚至 journal 查重前递增，文档应按真实增量点命名其语义，并单独说明严格 callback-start/callback-complete 是否存在。
+
 计划或实施文档可以解释参数的预期值和设定依据，但当前声明位置、覆盖优先级、绑定/转换和最终消费者必须沿代码与配置重新追踪。文档默认值与代码默认值不同时，以代码说明当前行为，同时记录文档漂移；不能任选一个看起来更合理的值。
 
 面试回答中额外说明：为什么需要这个参数、为什么采用当前默认值或范围、调大/调小的收益与风险、什么指标或事故会触发重新调参。没有实验或 ADR 证据时，明确说“默认值依据未记录”，再给出可验证的调参方案，不能虚构压测结论。
@@ -153,8 +159,18 @@ description: Use when creating or updating a module introduction, architecture w
 - 分支顺序、算法步骤、状态变化和数据结构；
 - 实际并发原语、锁、执行器、调度器和内存可见性保障；
 - 事务开始/提交位置，事务外副作用和失败窗口；
+- 所有拒绝 gate 与 durable mutation 的先后顺序；特别检查 `A() && B() && C()`、early return 和异常路径中，前面的 CAS/写入是否会在后续预算、权限、deadline 或状态 gate 失败后遗留半推进状态；
+- 外部副作用与本地 terminal state 分两步完成时，必须把结果拆成“明确未发生、明确已发生、结果未知/本地提交失败”三类；逐个检查 `publish -> markSent`、`callback -> journal commit`、`business write -> idempotency complete`、`retry publish -> original ACK` 等边界，确认 catch/retry 不会把已经发生或可能发生的外部效果误判为安全重试；
 - 重试、退避、超时、取消、熔断、降级、幂等、去重、补偿和清理；
 - provider/格式专用解析、缓冲、提交/丢弃语义；
+- typed outcome 是否由调用者完整消费：不能只取 `response/data/result` 而忽略同一对象的 `blocked/partial/error/stopReason/status`；
+- 外部调用结果是否真正传播到下一权威消费者，例如 memory、notebook、数据库、prompt、门禁或用户输出；“callback 被调用/消息已发布”不能替代结果消费证明；
+- 终止、回滚、错误和完成事件的关联字段是否由每个 producer 一致填充，并被 consumer 用同一键匹配；不能因为 schema 中字段“可选”或正常主路径带值，就假定 direct reply、fallback、timeout、replay 和补偿路径也带值；
+- 临时通知与持久事实必须分开审计：连接表的 key/cardinality 是否支持多 tab、多设备或重连，替换旧连接时是否关闭，广播失败是否有同节点 fallback，是否存在 event ID、replay、heartbeat、gap detection、backpressure 和最终数据库/状态查询补偿；
+- `afterCommit`、异步 listener、内存队列和 Pub/Sub 只能按其真实语义描述；逐项检查 commit 后进程崩溃、callback 前崩溃、订阅断线和执行失败是否有 durable job/outbox、claim、retry、watchdog 或 reconciliation owner；
+- 删除、detach、disable 和 revoke 涉及数据库父子行、缓存、搜索/向量索引、对象/文件存储或远端系统时，核对外键 cascade、child/parent 顺序、事务内外位置、tombstone 和幂等清理；单个 `@Transactional` 不能被写成跨系统原子提交；
+- 同一凭证、资源或状态维护正向索引与反向索引时，核对 create/rotate/delete/bulk-revoke 的原子边界、孤儿条目、并发重放和 TTL 漂移；本地安全快照缓存还要核对跨实例失效与最大陈旧窗口；
+- 软删除的查询可见性必须与数据库唯一约束、重建/重注册语义和错误映射一起验证；“查询不到”不能自动解释为“唯一键可复用”；
 - 关键参数如何进入该机制；
 - 对应测试如何覆盖成功、边界和失败分支。
 
@@ -170,7 +186,13 @@ description: Use when creating or updating a module introduction, architecture w
 - **并发**：点名实际使用的 `CountDownLatch`、原子类、线程池、`ScheduledExecutorService`、行锁、Redis 锁、CAS 或其他原语及竞争结果。
 - **数据契约**：列 schema、字段、索引、唯一约束、版本、幂等键、重复/陈旧/冲突处理和清理。
 - **安全与隐私**：列认证、授权、租户/资源边界、秘密读取、日志脱敏、提示词/工具/provider 载荷边界。
-- **评测/benchmark**：严格分开生产链与评测链，列数据集、执行器、judge/evaluator、指标公式与方向、阈值来源、stub/fixture/real provider 边界、产物血缘、promotion 门禁、可复现命令及“不证明什么”；完整执行 [模块文档完整性复核契约](references/completeness-review-contract.md) 的评测专项。
+- **认证与授权**：区分前端路由/菜单体验与后端强制边界；追踪 token claims 的生成和实际验证条件、即时/延迟撤销、refresh rotation、Cookie 属性、跨实例角色/状态新鲜度，以及登录限流、枚举和时序边界。
+- **会话/实时协议/文件生命周期**：区分同步入口锁与完整运行锁、identity 与 sequence、持久消息与临时事件；列 terminal correlation、连接 cardinality、reconnect/replay/heartbeat、补偿查询、UI 安全解锁是否取消后台任务；文件上传列接收上限、路径规范化、内容/恶意扫描、commit 后摄取 durability、detach/delete 与外部索引/存储清理。
+- **验证与安全边界**：凡代码名或文档使用“校验、验证、安全、隔离、授权、拒绝”，逐项列出实际检查条件、未检查条件、失败落点和绕过后果。轻量 MIME/扩展名路由、非空检查、正则或单次 probe 不得扩大成严格格式证明、恶意内容扫描、租户安全或端到端成功。
+- **评测/benchmark**：严格分开生产链与评测链，列数据集、执行器、judge/evaluator、指标公式与方向、阈值来源、stub/fixture/real provider 边界、产物血缘、promotion 门禁、可复现命令及“不证明什么”；核验 manifest 的 commit、dirty 状态及 diff/patch 绑定，不能把 dirty worktree 产物表述成干净提交的可复现结果；对每个 status/counter/boolean/provenance 字段追到生产代码和计算公式，区分真实外部回执、行为 probe、派生代理值、诊断字段与硬门禁，不能根据字段名推断证明强度；统计 false/missing/failure 行并说明门禁是否接受；对报告引用的每个输入文件重算 hash/checksum 并与报告绑定逐项比较，区分当前 checkout 字节、规范化序列化与换行符差异；搜索同 suite/runId/文件名的旧 dataset、manifest、report 或 shadow artifact，明确唯一权威输入；若核心数值可重算但输入 hash 不匹配，必须分别报告“数值可复现”和“原始证据链已漂移”，不得合并成“完全可复现”；完整执行 [模块文档完整性复核契约](references/completeness-review-contract.md) 的评测专项。
+- **E2E/preflight/health probe**：从报告字段追到真实动作和外部回执；确认 preflight 是否真的调用了目标 endpoint、provider、浏览器旅程或生产入口。固定零值、硬编码 true、只检查配置/工具暴露、允许 unavailable 的断言，只能证明对应弱条件，不能命名或描述成 transport smoke、live success、fixture rejection 或端到端成功。fixture 必须能在仓库或明确依赖中定位，并记录启动方式、版本与未覆盖边界。
+
+对代码注释、测试名和参数名中的语义也要反证。若它们声称“完整等待”“固定采样间隔”“覆盖某分支”或类似行为，必须继续追到实际 guard、循环、sleep、时间戳和断言边界；区分“配置/循环 sleep 值”与“运行产物中的实际间隔”。计时测试只有在断言能区分相邻候选行为（例如仅 TTFT 与 TTFT + stream duration）时，才能证明较强语义；仅满足较弱下界的断言不得被扩大解释。
 
 源码没有某机制时明确写“未实现/未发现”，不要套用通用架构模板。
 
@@ -290,6 +312,18 @@ description: Use when creating or updating a module introduction, architecture w
 - 接口、数据、配置、代码、并发、事务、异常、安全、观测、测试和扩展面都已处理或明确写“不适用”。
 - 每个行为参数都有来源、默认依据、覆盖顺序、绑定/校验、消费者、单位和影响；秘密值没有泄露。
 - 数字声明已复算循环边界、单位、首次尝试、共享预算和 timer 范围；并发/异步终止信号已检查反序和失败窗口。
+- 所有 retry/attempt 声明都已写明首次是否计数、计数递增点、终止条件和最多总执行次数，没有把 retries 与 attempts 混写。
+- 所有带 `actual/real/success/complete` 强语义的计数器都已核对增量点和最终消费者，没有把 gate attempt、callback start、callback complete 或 user-visible success 混写。
+- 所有 durable mutation 前后的 budget/permission/deadline/CAS gate 已审计；短路、异常或 early-return 不会被误写成原子状态机，半推进窗口已进入失败矩阵。
+- 所有“外部效果成功/未知 + 本地终态提交失败”窗口已单独建模为 ambiguous/reconciliation 路径；文档没有把 confirm timeout、ACK 丢失或 terminal commit 异常笼统写成可安全自动重试。
+- 所有完成/错误/回滚/取消事件的 producer 已逐一核对关联键、payload 和顺序；consumer 的匹配、解锁、retry 和补偿不会被缺失或陈旧事件误触发。
+- 所有 SSE/WebSocket/PubSub/内存事件已区分临时通知与持久 authority；连接 cardinality、替换/关闭、跨节点广播、Redis/broker 失败、本地 fallback、heartbeat、replay/gap 和断线补偿已说明。
+- 所有 `afterCommit`/异步 callback 已检查 commit 后崩溃窗口和 durable recovery owner；没有把回调注册、普通异步 listener 或 Pub/Sub 描述成持久任务队列。
+- 所有跨数据库、缓存、向量/搜索索引、文件/对象存储和远端系统的删除/撤销已核对 FK/cascade/顺序、事务边界、tombstone、幂等清理和 reconciliation；没有用本地事务声称跨系统原子性。
+- 所有正反索引、token rotation/bulk revoke、软删除唯一键和安全快照缓存已检查并发、部分失败、TTL、跨实例失效与可复用语义。
+- 所有 typed outcome 的 status/blocked/partial/error/stop reason 均已追到调用者；外部调用结果已验证进入下一阶段 memory/notebook/prompt/持久化/用户输出，而不是只证明调用发生。
+- 所有 ENFORCED deadline/timeout 声明已追到实际 transport 的动态 timeout、取消或中断；仅调用前后检查没有被写成阻塞调用受剩余 deadline 约束。
+- 所有 size/byte/token/item 上限已核对限制位置、单位与分配顺序；完整缓冲后的长度检查没有被写成传输或内存上限。
 - 每个特殊机制都解释到方法、分支、状态、原语和失败语义，并连接测试证据。
 - 每个重要设计/技术/算法选择都有约束、候选方案、选择来源、收益、代价、短板和重新评估条件；历史事实与当前推断已分开。
 - 面试章节不是裸题库；每个核心问题都有可口述答案、证据等级、自然追问和至少两种回答深度。
@@ -297,8 +331,14 @@ description: Use when creating or updating a module introduction, architecture w
 - 所有引用路径和符号已用 `rg`、`Test-Path` 或等价命令验证存在；删除陈旧引用。
 - 图片只在有信息价值时生成；最终图已实际打开并逐字/逐箭头检查，复制到仓库、相对路径嵌入且保留 Mermaid；被拒绝变体已清理。
 - 评测/benchmark 已区分生产与评测链、真实与合成依赖、指标与阈值、产物血缘和 promotion，不扩大证据结论。
+- 评测产物中的 status/counter/boolean/provenance 字段已追到生产公式与门禁消费者；字段名称没有被当作真实外部回执，false/missing/failure 数量没有被聚合平均值隐藏。
+- “校验/安全/隔离/拒绝”声明已列明实际检查和未覆盖条件，没有把轻量 detector、probe 或 prompt 约束写成强安全证明。
+- benchmark manifest 的 commit、dirty 状态和 diff/patch 绑定已核对；嵌入 hash 已按当前 checkout 与规范化字节分别复算；dirty 产物没有被归因于干净提交。
+- report 中每个 dataset/baseline/candidate/config hash 已对精确输入重算；同名或同 runId 的 shadow artifact 已搜索并确定权威；数值复算成功没有掩盖输入绑定漂移。
+- 注释、测试名和参数名中的强语义已与实际分支条件、循环、sleep、时间戳和断言边界交叉验证；配置值、循环等待值与观测间隔没有混写。
 - 多文档交付已明确每个行为的主权威文档、反向链接和替代关系；没有未核实就删除旧文档。
 - 未运行的测试、E2E、benchmark、live provider 或图片生成没有被写成已完成。
+- 所有 E2E/preflight/probe 结果字段均由真实动作产生；固定占位值、只检查暴露状态和允许 unavailable 的断言没有被扩大成 live transport 或端到端成功。
 - 文档没有尾随空格、秘密、临时路径、失效链接或与用户无关的工作树改动。
 
 至少运行：

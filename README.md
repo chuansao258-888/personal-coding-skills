@@ -257,9 +257,19 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
   binding，从 meter 注册追到所有记录点，并写清 publish、ACK、NACK、reject、
   requeue 和 DLQ 的真实终局；
 - 复算所有“最多/至少/默认/总预算”数字的循环边界、首次尝试、共享预算、
-  单位换算和 timer 范围，并检查异步信号反序时的竞态窗口；
+  单位换算和 timer 范围；对 retry/attempt 明确首次是否计数、递增点、终止
+  条件和最多总执行次数，并检查异步信号反序时的竞态窗口；
 - 对评测与 benchmark 分开生产链和评测链，核实数据集、judge/evaluator、指标
   公式、阈值来源、stub/fixture/real provider 边界、产物血缘与 promotion 门禁；
+  同时核验 manifest 的 commit/dirty/diff 绑定，对精确 dataset/baseline/candidate
+  输入重算摘要，识别换行符差异与同名/shadow 产物，并把“数值可复现”与
+  “原报告证据链完整”分开结论；
+- 不根据 `pass/completed/inserted/matched` 等字段名推断证明强度，而是追到字段
+  生产公式、真实回执或代理值、false/missing/failure 数量及消费它的硬门禁；
+- 对“校验、安全、隔离、拒绝”列出实际检查与未覆盖条件，不把 MIME/扩展名、
+  正则、非空检查、单次 probe 或 prompt 约束扩大成严格安全保证；
+- 反证注释、测试名和参数名中的强语义，追到实际 guard、callback、循环、sleep、
+  产物时间戳和断言边界，区分配置值、循环等待值与实际观测间隔；
 - 为核心面试问题同时生成 30 秒、2 分钟和深挖答案，解释“怎么做、为什么、
   为什么不选替代方案”，并覆盖收益、取舍、短板、演进触发条件和证据等级；
 - 对“遇到什么困难、怎样解决”使用背景、症状、诊断、根因、行动、验证和
@@ -691,8 +701,27 @@ concurrency primitives, transaction boundaries, retries, cancellation, and
 cleanup. It follows critical internal states through control flow, persistence,
 user-visible output, and operational signals instead of equating an internal
 callback with final success. It also recalculates retry/repair counts, derived
-deadlines, unit conversions, and loop boundaries, and audits reversed event
-orders for observable race windows. After drafting, it verifies every named
+deadlines, unit conversions, and loop boundaries; for retry/attempt limits it
+states whether the initial execution counts, where counters increment, the stop
+condition, and the maximum total executions. It also audits reversed event
+orders for observable race windows. When an external effect and its local
+terminal state are separate operations, it distinguishes definite failure,
+definite success, and ambiguous success so a confirm timeout or failed local
+commit is not automatically described as a safe retry. A declared enforced
+deadline is traced into the actual blocking or reactive transport; pre/post
+deadline checks are not treated as cancellation of an in-flight request.
+Response and file limits are classified by where they run (before, during, or
+after full buffering) and by their real unit, so a post-read character check is
+not described as a wire-byte or memory cap. It also audits every terminal event
+producer for correlation-key completeness; distinguishes ephemeral SSE/WebSocket/
+PubSub notification from durable state; checks connection cardinality, replacement,
+heartbeat, replay, broker failure, and local fallback; and never treats an
+after-commit callback or ordinary async listener as a durable job. Cross-system
+delete/revoke flows are checked against actual foreign keys, child-parent order,
+tombstones, idempotent cleanup, and reconciliation across caches, indexes, and
+file/object storage. Token/resource forward and reverse indexes, rotation, soft-delete
+uniqueness, and multi-instance security-cache freshness receive the same partial-
+failure analysis. After drafting, it verifies every named
 class, method, key, configuration binding mechanism, meter registration and
 recording call, and the exact publish/ACK/NACK/reject/requeue/DLQ terminal
 semantics instead of relying on framework convention. Current-state claims require independent confirmation from reachable
@@ -726,7 +755,22 @@ used to fabricate a development story.
 Evaluation and benchmark documentation separates the production path from the
 evaluation harness and verifies datasets, evaluators or judges, metric formulas,
 threshold provenance, stub/fixture/real-provider boundaries, artifact lineage,
-promotion gates, and reproducibility. Multi-document suites use an authority
+promotion gates, and reproducibility. It also verifies manifest commit, dirty,
+and diff bindings, recomputes digests against the exact dataset, baseline,
+candidate, and configuration inputs, detects line-ending-dependent evidence and
+same-name/run-ID shadow artifacts, and reports numeric reproducibility separately
+from original lineage integrity. Artifact fields such as
+`pass`, `completed`, `inserted`, or `matched` are traced to their producer
+formula, real acknowledgement or proxy semantics, false/missing/failure counts,
+and consuming gate. Validation and security claims enumerate actual checks and
+uncovered cases instead of promoting MIME/extension checks, regexes, probes, or
+prompt constraints into strong guarantees. Comments, test names, and
+parameter names are checked against actual guards, callbacks, loops, sleeps,
+artifact timestamps, and assertion boundaries so configured delays are not
+misreported as observed sampling intervals. E2E, preflight, health, and live
+probe fields must be backed by a real action and acknowledgement; fixed
+placeholders, exposure-only checks, unavailable-allowed assertions, or missing
+fixtures are reported as weaker evidence. Multi-document suites use an authority
 coverage matrix so each behavior has one primary explanation. Generated images
 are opened and checked label by label and arrow by arrow against Mermaid, while
 a bundled validator checks document structure, repository-local image paths,

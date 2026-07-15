@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from validate_module_doc import find_fence_errors, validate_document
+from validate_module_doc import find_fence_errors, mask_markdown_code, validate_document
 
 
 VALID_DOCUMENT = """# 限流模块
@@ -35,6 +35,16 @@ class FenceValidationTest(unittest.TestCase):
         errors = find_fence_errors(["```java", "x", "~~~"])
 
         self.assertEqual(["unclosed '```' fence opened on line 1"], errors)
+
+    def test_masks_fenced_and_inline_code_but_preserves_prose_and_lines(self) -> None:
+        source = "before `{{inline}}`\n```text\n{{fenced}}\n```\nafter {{prose}}\n"
+
+        masked = mask_markdown_code(source)
+
+        self.assertEqual(source.count("\n"), masked.count("\n"))
+        self.assertNotIn("{{inline}}", masked)
+        self.assertNotIn("{{fenced}}", masked)
+        self.assertIn("{{prose}}", masked)
 
 
 class DocumentValidationTest(unittest.TestCase):
@@ -86,6 +96,27 @@ class DocumentValidationTest(unittest.TestCase):
         self.assertIn("trailing whitespace", rendered)
         self.assertIn("possible literal secret", rendered)
         self.assertIn("forbidden temporary image reference", rendered)
+
+    def test_allows_documented_template_variables_inside_code(self) -> None:
+        document = self.write_document(
+            "# 模块\n\n```mermaid\nA --> B\n```\n\n"
+            "模板变量是 `{{userInput}}`。\n\n"
+            "```text\n{{intentPath}}\n```\n\n## 证据索引\n\n已核实。\n"
+        )
+
+        errors, _ = validate_document(document, allow_no_mermaid=False)
+
+        self.assertEqual([], errors)
+
+    def test_rejects_moustache_placeholder_in_prose(self) -> None:
+        document = self.write_document(
+            "# 模块\n\n```mermaid\nA --> B\n```\n\n"
+            "模块名称：{{module_name}}\n\n## 证据索引\n\n已核实。\n"
+        )
+
+        errors, _ = validate_document(document, allow_no_mermaid=False)
+
+        self.assertIn("unresolved placeholder", "\n".join(errors))
 
 
 if __name__ == "__main__":

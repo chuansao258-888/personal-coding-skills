@@ -18,8 +18,8 @@ PLACEHOLDER_PATTERNS = (
     re.compile(r"\bTBD\b", re.IGNORECASE),
     re.compile(r"\bTO[- ]?BE[- ]?FILLED\b", re.IGNORECASE),
     re.compile(r"待回填|待补充|占位内容"),
-    re.compile(r"\{\{[^}\n]+\}\}"),
 )
+MOUSTACHE_PLACEHOLDER_PATTERN = re.compile(r"\{\{[^}\n]+\}\}")
 SECRET_PATTERNS = (
     re.compile(r"\bsk-[A-Za-z0-9_-]{20,}\b"),
     re.compile(r"(?i)\bAuthorization\s*:\s*Bearer\s+[A-Za-z0-9._~-]{16,}"),
@@ -98,6 +98,31 @@ def find_fence_errors(lines: list[str]) -> list[str]:
     return [f"unclosed {marker!r} fence opened on line {line_number}"]
 
 
+def mask_markdown_code(text: str) -> str:
+    """Mask fenced and inline code while preserving newlines for diagnostics."""
+    masked_lines: list[str] = []
+    opening: tuple[str, int] | None = None
+    for line in text.splitlines(keepends=True):
+        match = FENCE_PATTERN.match(line)
+        if match:
+            marker = match.group(1)
+            marker_key = (marker[0], len(marker))
+            if opening is None:
+                opening = marker_key
+            elif marker_key[0] == opening[0] and marker_key[1] >= opening[1]:
+                opening = None
+            masked_lines.append("\n" if line.endswith("\n") else "")
+            continue
+        if opening is not None:
+            masked_lines.append("\n" if line.endswith("\n") else "")
+            continue
+        newline = "\n" if line.endswith("\n") else ""
+        content = line[:-1] if newline else line
+        content = re.sub(r"`+[^`\n]*`+", lambda match: " " * len(match.group(0)), content)
+        masked_lines.append(content + newline)
+    return "".join(masked_lines)
+
+
 def validate_document(path: Path, allow_no_mermaid: bool) -> tuple[list[str], list[str]]:
     errors: list[str] = []
     warnings: list[str] = []
@@ -132,6 +157,12 @@ def validate_document(path: Path, allow_no_mermaid: bool) -> tuple[list[str], li
         if match:
             line = text.count("\n", 0, match.start()) + 1
             errors.append(f"{path}:{line}: unresolved placeholder {match.group(0)!r}")
+
+    prose = mask_markdown_code(text)
+    match = MOUSTACHE_PLACEHOLDER_PATTERN.search(prose)
+    if match:
+        line = prose.count("\n", 0, match.start()) + 1
+        errors.append(f"{path}:{line}: unresolved placeholder {match.group(0)!r}")
 
     for pattern in SECRET_PATTERNS:
         match = pattern.search(text)
