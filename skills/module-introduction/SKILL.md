@@ -1,6 +1,6 @@
 ---
 name: module-introduction
-description: Use when creating or updating a module introduction, architecture walkthrough, module README, onboarding guide, implementation explanation, technical interview guide, or interview answers in any repository. Produce an evidence-based Chinese document that completely covers the scoped module's architecture, design and technology choices, runtime workflow, special code mechanisms, APIs, data, configuration and parameter provenance, failure behavior, verification, trade-offs, shortcomings, and future evolution; explain why each design, stack, algorithm, parameter, and implementation approach was chosen, compare realistic alternatives without inventing history, and use Codex ImageGen to embed a repository-local architecture image when visualization materially improves understanding.
+description: Use when creating or updating a module introduction, architecture walkthrough, module README, onboarding guide, implementation explanation, technical interview guide, or interview answers in any repository. Produce an evidence-based Chinese document that completely covers the scoped module's architecture, design and technology choices, runtime workflow, special code mechanisms, APIs, data, configuration and parameter provenance, failure behavior, verification, trade-offs, shortcomings, and future evolution; use existing plans and implementation records as discovery and historical-intent inputs but independently verify every current-state claim against reachable code, configuration, migrations, tests, and runtime evidence; explain why each design, stack, algorithm, parameter, and implementation approach was chosen, compare realistic alternatives without inventing history, and use Codex ImageGen to embed a repository-local architecture image when visualization materially improves understanding.
 ---
 
 # 模块完整介绍
@@ -11,8 +11,9 @@ description: Use when creating or updating a module introduction, architecture w
 
 - 默认用简体中文撰写标题、正文、表格、图注和面试问答。仅在用户明确要求其他语言或仓库有强制语言规范时切换；代码标识符、配置键、SQL、类名和协议字段保留原文。
 - 将“完整”定义为“已声明模块边界内的每个已发现实现面都有去向”：正文说明、附录登记、明确排除或标为未验证。不要把“扫描了若干代表文件”表述成完整覆盖。
-- 只依据实际代码、测试、配置、迁移、ADR、计划和运行产物陈述事实。禁止凭经验补齐不存在的实现。
-- 区分代码事实、运行产物、文档决策、推断和未验证项。禁止把计划、历史实验、取消工作或未执行检查写成已完成能力。
+- 当前实现事实必须由可达代码、配置、迁移/schema、测试或运行产物证明。计划、实施记录、ADR 和既有说明可用于发现入口、理解意图、历史与选择理由，但不能替代亲自阅读和追踪当前实现。
+- 区分代码事实、运行产物、文档决策、文档声明、推断和未验证项。即使实施文档标为“完成”，也要核对真实调用链、配置绑定、数据契约、测试覆盖和旧路径清理；禁止把计划、历史实验、取消工作或未执行检查写成已完成能力。
+- 文档与代码冲突时分别报告“文档期望/历史声明”和“当前代码行为”，标记漂移并给出双方证据。不要为了让文档看起来正确而忽略代码，也不要用当前代码反向改写历史决策。
 - 不泄露密钥、令牌、真实连接串、私有地址、用户数据、模型原始载荷或秘密配置值。秘密参数只写变量名、用途、来源层级和脱敏状态。
 - 代码引用要精确到文件和符号；必要时引用短小的方法签名、枚举、不变量、SQL/Lua 片段。不要粘贴整类、整文件或大段受保护内容。
 - 面试章节必须同时包含问题与可直接口述的答案，不得只给问题清单。回答要覆盖“结论、如何实现、为什么、遇到的困难与解决过程、替代方案、取舍、短板、改进触发条件和证据”，并能承受逐层追问。
@@ -25,7 +26,7 @@ description: Use when creating or updating a module introduction, architecture w
 
 在编辑前：
 
-1. 读取仓库的 `AGENTS.md`、`CLAUDE.md`、README、术语表、工程标准和相关 ADR；遵守其中的分支、文档位置、秘密处理和验证规则。
+1. 读取仓库的 `AGENTS.md`、`CLAUDE.md`、README、术语表、工程标准、相关 ADR、现有计划和实施文档；遵守其中的分支、文档位置、秘密处理和验证规则。
 2. 运行 `git status --short --branch` 与 `git branch --show-current`，保留无关改动。
 3. 写出模块边界：入口、出口、拥有的状态、直接依赖、直接消费者、明确不属于该模块的邻接能力。
 4. 明确文档状态：当前实现、历史背景、计划能力、诊断能力、未验证能力分别是什么。
@@ -43,9 +44,32 @@ description: Use when creating or updating a module introduction, architecture w
 - 单元测试、集成测试、端到端测试、fixture、评测脚本、健康检查、日志/指标定义和实际运行产物；
 - 计划、实现记录、ADR、既有模块文档及最近相关变更。
 
+将计划和实施文档当作“导航与待验证声明”，按以下顺序使用：
+
+1. 先定位与模块相关的计划、阶段说明、实施记录、review/Finding、ADR 和既有介绍，提取预期目标、模块边界、候选文件、参数、测试、选择理由、已知限制和历史难点。
+2. 把每条“已实现/已验证/已移除/性能达到”的文档声明登记为待核验项；文档中的勾选框、状态或命令文本本身不是完成证据。
+3. 不依赖文档给出的文件清单，使用 `rg --files`、符号/配置键搜索、调用者与消费者追踪，在整个声明边界内独立发现当前实现。文档可能遗漏新增路径、保留失效路径或引用已重命名符号。
+4. 对每条声明核对当前代码是否存在且可达、配置是否绑定到最终消费者、schema/迁移是否匹配、测试是否覆盖当前路径、旧权威是否已清理、运行产物是否来自当前版本。
+5. 产生“文档声明—代码验证台账”，正文解释所有不一致；不要只挑与文档一致的证据。
+
+若模块没有计划或实施文档，记录“未发现相关计划/实施记录”和实际搜索范围，然后继续从代码建立完整证据链；缺少这些文档不构成停止梳理或降低代码核验范围的理由。
+
+台账至少包含：
+
+| 字段 | 内容 |
+|---|---|
+| 文档与声明 | 路径、章节/ID、计划/实施状态及具体主张 |
+| 独立发现方式 | 使用的搜索词、入口、调用者、配置键或数据契约 |
+| 当前实现证据 | 可达代码、配置、迁移/schema、测试和运行产物 |
+| 核验状态 | `一致`、`部分实现`、`已漂移`、`仅计划`、`无法验证` 或 `文档遗漏` |
+| 差异与影响 | 缺失、改名、失效、不可达、默认值变化、测试陈旧或行为差异 |
+| 正文去向 | 当前行为、历史背景、限制、未验证项或文档漂移章节 |
+
+`一致` 只表示已核对的声明与当前实现一致，不表示整个模块已验证。`部分实现` 和 `已漂移` 必须说明当前可观察行为，不用模糊措辞折中。
+
 建立“覆盖台账”，每项至少记录 `类别 / 标识符 / 证据路径 / 正文位置 / 状态`。状态只能是：`已说明`、`明确排除`、`未验证`。发现同名或重复实现时，确认谁是权威实现，说明旧路径是否仍可达。
 
-不得只因文件数量多而随机抽样。可以先读代表文件建立搜索词，再扩展到边界内所有命中项，直到覆盖台账没有未归类项。
+不得只因文件数量多而随机抽样，也不得只阅读计划或实施文档点名的文件。可以先用文档和代表文件建立搜索词，再独立扩展到边界内所有命中项，直到覆盖台账与文档声明—代码验证台账都没有未归类项。
 
 ### 3. 还原端到端架构和运行链路
 
@@ -55,6 +79,8 @@ description: Use when creating or updating a module introduction, architecture w
 入口/触发器 -> 协议转换 -> 应用编排 -> 核心规则/状态所有者
              -> 数据或基础设施适配 -> 外部依赖 -> 持久化/响应/事件
 ```
+
+调用链必须从当前入口、调用者、依赖注入/注册、配置开关和最终消费者亲自还原。计划图、实施清单和旧架构图只提供假设；若代码存在但没有注册、被开关禁用、被新路径替代或没有当前调用者，不得写成活跃运行链路。
 
 同时追踪正常路径、合法空结果、业务拒绝、校验失败、超时、取消、依赖失败、并发冲突、重试/降级和清理路径。说明每一跳增加的边界价值，不把无语义的转发层包装成设计亮点。
 
@@ -105,6 +131,8 @@ description: Use when creating or updating a module introduction, architecture w
 ```
 
 对于硬编码常量，也要说明设定位置和可找到的来源：测试契约、协议限制、供应商文档、历史 ADR、经验性选择或“仓库未记录依据”。不要把代码中的数字自动解释成行业最佳值。
+
+计划或实施文档可以解释参数的预期值和设定依据，但当前声明位置、覆盖优先级、绑定/转换和最终消费者必须沿代码与配置重新追踪。文档默认值与代码默认值不同时，以代码说明当前行为，同时记录文档漂移；不能任选一个看起来更合理的值。
 
 面试回答中额外说明：为什么需要这个参数、为什么采用当前默认值或范围、调大/调小的收益与风险、什么指标或事故会触发重新调参。没有实验或 ADR 证据时，明确说“默认值依据未记录”，再给出可验证的调参方案，不能虚构压测结论。
 
@@ -189,7 +217,7 @@ description: Use when creating or updating a module introduction, architecture w
 8. **证据与置信度**：给出路径和符号，使用 `明确记录 | 代码推断 | 未记录`。
 9. **可能追问**：列 1–3 个自然追问，并准备可继续下钻的事实。
 
-对“你遇到了什么困难、如何解决”类问题，使用 `背景/目标 → 可观察症状 → 约束 → 诊断过程 → 根因 → 采取行动 → 验证结果 → 复盘`。只写有证据的排查步骤、失败尝试、结果和个人职责；不得根据最终代码倒推出一段虚构的开发故事。若仓库只能证明技术难点和最终机制，写成“该实现需要解决的难点”，将个人经历、实际尝试和贡献标为待用户确认。
+对“你遇到了什么困难、如何解决”类问题，使用 `背景/目标 → 可观察症状 → 约束 → 诊断过程 → 根因 → 采取行动 → 验证结果 → 复盘`。计划、实施记录和 Finding 可以提供历史线索，但排查步骤、根因、修复落点和结果仍要与对应代码、diff、测试或产物交叉验证。只写有证据的失败尝试、结果和个人职责；不得根据最终代码或实施文档单独倒推出一段虚构的开发故事。若仓库只能证明技术难点和最终机制，写成“该实现需要解决的难点”，将个人经历、实际尝试和贡献标为待用户确认。
 
 同时提供至少两种口述深度：`30 秒回答` 用于结论和核心取舍，`2 分钟回答` 用于调用链、选择依据、短板和演进。对模块最关键的 3–5 个问题再提供 `深挖回答`，能够解释到方法、参数、状态、并发/事务和失败窗口。
 
@@ -234,11 +262,12 @@ description: Use when creating or updating a module introduction, architecture w
 
 - **代码证据**：源文件、测试、配置、迁移或 schema 直接证明。
 - **产物证据**：日志、报告、manifest、截图、指标或运行目录证明。
-- **文档证据**：ADR、批准计划、实现记录或既有规范证明。
+- **决策/历史文档证据**：ADR、批准计划、实施记录、Finding 或既有规范证明当时的意图、约束、过程或声明；不单独证明当前实现仍存在或可达。
+- **文档声明核验**：文档主张已与当前代码/配置/迁移/测试/产物交叉验证，并标记 `一致 | 部分实现 | 已漂移 | 仅计划 | 无法验证 | 文档遗漏`。
 - **推断**：依据多处事实连接出的解释，明确标注推断依据。
 - **未验证**：尚未运行、无法访问或证据不足。
 
-所有数字、默认值、路径、类名、迁移名、SQL/Lua 名、配置键、测试名和图片路径都必须在交付前重新核对。计划文档只能证明意图，不能证明运行结果。
+所有数字、默认值、路径、类名、迁移名、SQL/Lua 名、配置键、测试名和图片路径都必须在交付前重新核对。计划文档只能证明意图；实施文档只能证明它记录过某个实现或过程声明，二者都不能单独证明声明真实发生或当前运行结果。
 
 ## 完整性终检
 
@@ -246,6 +275,8 @@ description: Use when creating or updating a module introduction, architecture w
 
 - 模块边界、权威行为和状态所有者已明确；上游、下游和依赖方向完整。
 - 覆盖台账中没有无去向项；所有 `未验证` 均在限制章节可见。
+- 已读取存在的计划和实施文档，但当前实现发现过程没有局限于其文件清单；所有文档声明均进入核验台账。
+- 每个“已实现/已验证/已移除/性能达到”声明都有当前代码、配置、迁移、测试或产物的交叉证据；文档漂移和文档遗漏均已显式说明。
 - 接口、数据、配置、代码、并发、事务、异常、安全、观测、测试和扩展面都已处理或明确写“不适用”。
 - 每个行为参数都有来源、默认依据、覆盖顺序、绑定/校验、消费者、单位和影响；秘密值没有泄露。
 - 每个特殊机制都解释到方法、分支、状态、原语和失败语义，并连接测试证据。

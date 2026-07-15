@@ -243,6 +243,10 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 - 默认使用简体中文，代码标识符和配置键保留原文；
 - 先声明模块边界，再建立覆盖台账，确保每个发现项都有正文、排除或
   `未验证` 状态；
+- 读取现有计划、实施记录、Finding 和 ADR 作为导航、原始意图和历史线索，
+  但把其中每个当前状态声明登记为待核验项；
+- 不局限于文档点名的文件，独立搜索当前代码、配置、迁移、测试和调用可达性，
+  建立 `一致 / 部分实现 / 已漂移 / 仅计划 / 无法验证 / 文档遗漏` 对照台账；
 - 追踪入口 → 编排 → 核心规则 → 基础设施 → 外部依赖 → 输出/持久化；
 - 为每个行为参数记录声明位置、来源优先级、默认值依据、绑定/转换、校验、
   最终消费者、行为影响和保密要求；
@@ -258,7 +262,8 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 
 **边界与输出**
 
-它不把计划当实现，不把未运行测试写成通过，也不凭经验发明代码行为。
+它不把计划或实施记录当成当前实现的绝对权威，不把未运行测试写成通过，
+也不凭经验发明代码行为。文档与代码冲突时分别报告历史/期望和当前行为。
 输出通常是模块介绍、架构说明、参数来源表、验证证据，以及包含连续追问、
 方案对比、困难与解决过程、实现取舍、短板和未来提升的面试答案。
 
@@ -671,8 +676,21 @@ The skill declares a module boundary, creates a coverage ledger, reconstructs
 the complete runtime path, traces every behavior-affecting parameter from source
 to consumer, and explains special algorithms, methods, state machines,
 concurrency primitives, transaction boundaries, retries, cancellation, and
-cleanup. Claims must be code-, artifact-, or document-backed; unverified work
-remains explicitly labeled.
+cleanup. Current-state claims require independent confirmation from reachable
+code, configuration, migrations, tests, or current runtime artifacts; decision
+and history claims may use document evidence. Unverified work remains explicitly
+labeled.
+
+Existing plans, implementation records, findings, and ADRs are discovery,
+original-intent, and history inputs—not absolute current-state authorities. The
+skill independently searches beyond their cited files and verifies reachability,
+configuration binding, migrations, tests, cleanup, and runtime evidence. It
+reconciles each document claim as consistent, partially implemented, drifted,
+plan-only, unverified, or omitted from documentation, and reports historical or
+expected behavior separately from current code when they conflict.
+If no related plan or implementation record exists, it records the search scope
+and continues with full code verification rather than treating documentation as
+a prerequisite.
 
 For interviews, it generates answers rather than a bare question list. Core
 questions receive 30-second, two-minute, and deep-dive versions covering the
