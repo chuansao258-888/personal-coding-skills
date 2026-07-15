@@ -251,6 +251,12 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 - 为每个行为参数记录声明位置、来源优先级、默认值依据、绑定/转换、校验、
   最终消费者、行为影响和保密要求；
 - 深挖实际方法、分支、状态机、并发原语、事务边界、重试、取消和清理；
+- 把关键内部状态继续追到控制流、持久化、用户可见结果与日志/指标，区分
+  transport、business、persistence 和 user-visible success；
+- 复算所有“最多/至少/默认/总预算”数字的循环边界、首次尝试、共享预算、
+  单位换算和 timer 范围，并检查异步信号反序时的竞态窗口；
+- 对评测与 benchmark 分开生产链和评测链，核实数据集、judge/evaluator、指标
+  公式、阈值来源、stub/fixture/real provider 边界、产物血缘与 promotion 门禁；
 - 为核心面试问题同时生成 30 秒、2 分钟和深挖答案，解释“怎么做、为什么、
   为什么不选替代方案”，并覆盖收益、取舍、短板、演进触发条件和证据等级；
 - 对“遇到什么困难、怎样解决”使用背景、症状、诊断、根因、行动、验证和
@@ -258,7 +264,10 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 - 区分明确记录的历史理由、代码推断和未记录依据，不把继承的技术栈包装成
   模块从零选型，也不虚构 POC、评分或 benchmark；
 - 使用适合的 Mermaid；只有图片能显著降低理解成本时才调用 ImageGen，
-  并将最终图片落盘到仓库后嵌入。
+  并将最终图片落盘到仓库后嵌入；最终图必须实际打开，逐字核对标签、逐箭头
+  对照 Mermaid，清理被拒绝变体；
+- 多文档交付先建立权威覆盖矩阵，每个行为只保留一个主解释位置；使用配套
+  校验脚本检查 Mermaid、覆盖索引、图片路径、占位符、临时路径和明显秘密。
 
 **边界与输出**
 
@@ -676,7 +685,11 @@ The skill declares a module boundary, creates a coverage ledger, reconstructs
 the complete runtime path, traces every behavior-affecting parameter from source
 to consumer, and explains special algorithms, methods, state machines,
 concurrency primitives, transaction boundaries, retries, cancellation, and
-cleanup. Current-state claims require independent confirmation from reachable
+cleanup. It follows critical internal states through control flow, persistence,
+user-visible output, and operational signals instead of equating an internal
+callback with final success. It also recalculates retry/repair counts, derived
+deadlines, unit conversions, and loop boundaries, and audits reversed event
+orders for observable race windows. Current-state claims require independent confirmation from reachable
 code, configuration, migrations, tests, or current runtime artifacts; decision
 and history claims may use document evidence. Unverified work remains explicitly
 labeled.
@@ -703,6 +716,15 @@ Challenge questions use a background, symptom, diagnosis, root cause, action,
 verification, and reflection chain. The skill claims personal contribution or
 failed attempts only when evidence or the user confirms them; final code is not
 used to fabricate a development story.
+
+Evaluation and benchmark documentation separates the production path from the
+evaluation harness and verifies datasets, evaluators or judges, metric formulas,
+threshold provenance, stub/fixture/real-provider boundaries, artifact lineage,
+promotion gates, and reproducibility. Multi-document suites use an authority
+coverage matrix so each behavior has one primary explanation. Generated images
+are opened and checked label by label and arrow by arrow against Mermaid, while
+a bundled validator checks document structure, repository-local image paths,
+placeholders, temporary references, and obvious literal secrets.
 
 ```text
 Use $module-introduction to document the memory module in Chinese. Cover its
