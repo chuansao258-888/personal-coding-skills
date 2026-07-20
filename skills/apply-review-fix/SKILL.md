@@ -40,7 +40,11 @@ the finding.
 - Do not commit a repair before independent re-review closes its findings. The
   accepting `$cross-review` performs any repository-required automatic phase
   checkpoint. Never push or open a PR unless the user explicitly asks.
-- Keep fixes simple and proportionate. Do not introduce avoidable nesting, speculative abstractions, pass-through wrappers, or broad refactors to close a narrow finding.
+- Keep fixes simple and proportionate. Do not introduce avoidable nesting,
+  speculative abstractions, pass-through wrappers, or broad refactors to close
+  a narrow finding. Add no variable/parameter, gate/threshold, retry, fallback,
+  or compatibility branch unless the Finding requires it and identifies its
+  current need, real consumer or trigger, and verification.
 - Keep code style consistent with the touched area. Do not mix conventions or reformat unrelated files to close a narrow finding.
 - If fixing a review finding reveals unresolved `Open Questions`, `Open Decisions`, `Options`, `Alternatives`, `TBD`, or equivalent blocking clarification items in the plan, implementation document, review result, or current phase, stop and ask the user. Do not start or continue implementation until those questions are clarified.
 

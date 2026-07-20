@@ -122,7 +122,9 @@ Run this gate after repository discovery and before generating `AGENTS.md`.
 5. Ensure the standard covers readable control flow, low nesting, cohesive
    responsibilities, meaningful naming, useful comments, explicit logic and
    outcomes, minimal abstractions, errors, tests, security, documentation,
-   cleanup, and verification evidence.
+   cleanup, and verification evidence. Require a current need, real consumer or
+   trigger, and focused verification for every added variable/parameter,
+   gate/threshold, retry, fallback, or compatibility branch.
 6. Track the standard when it is intended for contributors, a team, a public
    repository, or CI. Ignore it only when the user explicitly wants personal
    local policy; record that decision in `AGENTS.md`.
@@ -243,6 +245,10 @@ State these handoff invariants:
   self-accept a phase.
 - The next phase waits for `ACCEPT`, all blocking Findings `CLOSED`, required
   verification/documentation, and any repository-required checkpoint commit.
+- Every workflow stage enforces the canonical simplicity rule: add no
+  behavior-affecting variable/parameter, gate/threshold, retry, fallback, or
+  compatibility branch without a current need, real consumer or trigger, and
+  focused verification.
 - Every distinct task begins with a branch gate. A task's planning,
   implementation, review-fix, and re-review stay on one branch; phases do not
   create nested branches.
@@ -314,8 +320,9 @@ rules in `ENGINEERING_STANDARDS.md`:
 - Keep business capabilities cohesive, dependency direction acyclic, important
   state and business-rule authority explicit, public surfaces minimal, failure
   semantics distinguishable, and changes local. Require present-value
-  justification for new abstractions, fallbacks, retries, caches, compatibility
-  layers, or shared code.
+  justification for new abstractions, behavior-affecting variables/parameters,
+  gates/thresholds, fallbacks, retries, caches, compatibility layers, or shared
+  code; hypothetical future use is not sufficient.
 - Follow existing repository layout before creating new directories.
 - Use stable, descriptive names; avoid `data.json`, `final`, `copy`, `draft`, and version-number suffixes.
 - Use repository-local naming conventions for docs, tests, fixtures, schemas, and generated outputs.

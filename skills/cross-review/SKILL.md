@@ -220,6 +220,9 @@ Review new files, directories, language pairs, fixtures, generated outputs, and 
 - Are implementation phases vertical slices with goals, expected files/modules, deliverables, tests, verification commands, and manual checks?
 - Are production planning gates covered when relevant: API contract, data/migration, configuration/env vars, security/privacy, release/rollback, observability, and Definition of Done?
 - Does the plan constrain implementation simplicity: existing patterns to reuse, abstractions/refactors to avoid, and complexity risks that need justification?
+- Does every planned variable/parameter, gate/threshold, retry, fallback, or
+  compatibility branch map to a current requirement or evidenced failure mode,
+  a real consumer or trigger, and focused verification?
 - Does the plan identify code style constraints for touched areas: naming, package/module layout, DTO/type/component/test conventions, error/log handling, formatting, and lint/type/build expectations?
 - Does each non-trivial phase provide an Architecture Contract with applicable
   repository rule IDs, ownership, authority, dependency direction, failure
@@ -240,6 +243,10 @@ Review new files, directories, language pairs, fixtures, generated outputs, and 
 - Did it add extra endpoints, permissions, debug APIs, UI scope, migrations, or abstractions the user did not ask for?
 - Is the implementation simple and readable, with avoidable nesting, pass-through wrappers, speculative abstractions, and generic helper layers removed?
 - Does each new abstraction, seam, service, helper, or component earn its keep through reuse, testability, isolation, or a clear domain boundary?
+- Did the implementation add a behavior-affecting variable/parameter,
+  gate/threshold, retry, fallback, or compatibility branch without a current
+  need, real consumer or trigger, and focused verification? If so, require the
+  simpler direct path.
 - Are complex branches, fallback paths, budget checks, and error paths explicit and covered by tests rather than hidden in clever conditionals?
 - Does the implementation match local code style for naming, package/module placement, construction patterns, error handling, logging, import ordering, formatting, and tests?
 - Does Architecture Conformance Evidence match the actual ownership,

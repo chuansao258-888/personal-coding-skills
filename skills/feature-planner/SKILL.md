@@ -127,7 +127,12 @@ When the feature touches one of these areas, the plan must include the correspon
 - Security or privacy: permission checks, data exposure, logging boundaries, trace/prompt/tool/provider sanitization, and retention behavior.
 - Release or rollback: feature flags, staged rollout, fallback behavior, old-client compatibility, and how to disable the feature.
 - Observability: logs, metrics, health checks, audit/debug surfaces, and what must not be logged.
-- Implementation simplicity: expected seams, reuse of existing patterns, complexity risks, and explicit non-goals for abstractions or refactors that should not be introduced.
+- Implementation simplicity: expected seams, reuse of existing patterns,
+  complexity risks, and explicit non-goals for abstractions or refactors that
+  should not be introduced. Do not plan a new behavior-affecting variable or
+  parameter, gate or threshold, retry, fallback, or compatibility branch unless
+  a current requirement or evidenced failure mode needs it and the plan names
+  its real consumer or trigger and verification.
 - Code style consistency: existing naming, package/module layout, DTO/type/component/test conventions, error handling, logging, formatting, and lint/type/build expectations.
 - Architecture and consistency: business capability owner, behavior/state
   owner, authoritative rule location, existing and added dependency direction,
@@ -154,7 +159,8 @@ Public API and data-model impact
 Transaction, concurrency, and idempotency boundary
 Empty / rejection / failure / timeout / fallback semantics
 Existing patterns to reuse
-New abstractions and present-value justification
+New abstractions or control surfaces (variables, gates, fallbacks) and
+present-value justification
 Change-locality boundary
 Cleanup of superseded code, rules, config, tests, and docs
 Verification evidence required

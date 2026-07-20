@@ -77,6 +77,10 @@ flowchart TD
 | [`feature-implementer`](skills/feature-implementer/SKILL.md) | 只实现已接受阶段，完成测试、清理和架构符合性证据 | `IMPLEMENTED_PENDING_REVIEW`、测试、实现记录 | `cross-review` |
 | [`module-introduction`](skills/module-introduction/SKILL.md) | 基于代码证据编写完整中文模块介绍与可追问面试答案，解释架构、选型、实现、取舍和演进 | 模块 README/架构说明/面试答案、Mermaid 或必要图片 | 文档评审或交付 |
 
+六个技能共同遵守 `SIMP-02`：新增变量或参数、门槛或阈值、重试或兜底时，
+必须有当前需求或已证实故障场景，并能指向实际消费者、触发条件和验证证据。
+直接路径已满足需求时，不再为假设的未来场景增加控制面。
+
 ### 3. 每个技能的详细说明
 
 #### 3.1 `agent-guidelines-init`
@@ -327,7 +331,15 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 
 ### 4. Looping Workflow：完整循环用法
 
-#### 4.1 不可跳过的状态规则
+#### 4.1 防止过度工程化
+
+规划、实现、修复和评审都必须执行 `SIMP-02`。每个新变量或参数、门槛或
+阈值、重试或兜底都要说明它正在解决的当前问题，以及实际消费者、触发条件
+和验证方式。缺少这些证据时，优先删除该控制面或使用更直接的实现。
+
+“将来可能需要”、“多一层更安全”或“先留个兜底”不足以单独构成引入理由。
+
+#### 4.2 不可跳过的状态规则
 
 | 状态/结论 | 谁可以产生 | 含义 | 下一步 |
 |---|---|---|---|
@@ -339,7 +351,7 @@ READY_FOR_REVIEW 与 Closure Evidence，不要自我关闭 Finding。
 | `REJECT` | `cross-review` | 需要澄清、调查或重新规划 | 用户决定或 `feature-planner` |
 | `ACCEPT` | `cross-review` | 当前评审目标满足 Spec、Standards 和证据门槛 | 实现、checkpoint 或下一 phase |
 
-#### 4.2 一次完整功能循环
+#### 4.3 一次完整功能循环
 
 **步骤 0：只执行一次的仓库初始化**
 
@@ -615,6 +627,11 @@ flowchart TD
 | [`feature-implementer`](skills/feature-implementer/SKILL.md) | Implement an accepted phase with tests, cleanup, and conformance evidence | `IMPLEMENTED_PENDING_REVIEW`, implementation record | `cross-review` |
 | [`module-introduction`](skills/module-introduction/SKILL.md) | Produce a complete Chinese module walkthrough and evidence-backed interview answers that explain architecture, choices, implementation, trade-offs, and evolution | Module README, architecture/parameter/code analysis, interview answers | Documentation review or delivery |
 
+All six skills follow `SIMP-02`. A new variable or parameter, gate or threshold,
+retry, or fallback needs a current requirement or evidenced failure mode plus a
+real consumer, trigger, and verification evidence. When the direct path already
+meets the requirement, do not add control surfaces for hypothetical future use.
+
 ### 3. Detailed Skill Reference
 
 #### 3.1 `agent-guidelines-init`
@@ -815,7 +832,17 @@ and evidence-backed follow-up interview answers.
 
 ### 4. Looping Workflow
 
-#### 4.1 State ownership
+#### 4.1 Avoid Overengineering
+
+Planning, implementation, repair, and review all enforce `SIMP-02`. Every new
+variable or parameter, gate or threshold, retry, or fallback must identify the
+current problem it solves, its real consumer and trigger, and how it is verified.
+Without that evidence, remove the control surface or use a more direct design.
+
+"We may need it later," "another layer is safer," and "keep a fallback just in
+case" are not sufficient reasons on their own.
+
+#### 4.2 State ownership
 
 | State or verdict | Produced by | Meaning | Required next step |
 |---|---|---|---|
@@ -827,7 +854,7 @@ and evidence-backed follow-up interview answers.
 | `REJECT` | `cross-review` | Clarification, investigation, or replanning is required | User decision or `feature-planner` |
 | `ACCEPT` | `cross-review` | The reviewed target satisfies Spec, Standards, and evidence gates | Implement, checkpoint, or continue |
 
-#### 4.2 Full feature sequence
+#### 4.3 Full feature sequence
 
 1. Run `agent-guidelines-init` once for repository setup.
 2. Run `feature-planner` and resolve all blocking questions.

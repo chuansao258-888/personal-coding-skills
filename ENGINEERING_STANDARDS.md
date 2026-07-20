@@ -192,7 +192,13 @@ Evidence: transaction or concurrency boundary, failure window, and tests.
 
 Evidence: allowed diff, non-goals, cleanup, and avoided adjacent changes.
 
-### SIMP-02 New Abstractions Must Earn Their Keep
+### SIMP-02 New Complexity Must Earn Its Keep
+
+Treat every new behavior-affecting variable or parameter, gate or threshold,
+fallback, retry, default, and compatibility branch as a control surface. Add it
+only for a current requirement or evidenced failure mode, with a concrete
+consumer or trigger and focused verification. Hypothetical flexibility,
+defense-in-depth, and future-proofing are not sufficient justification.
 
 Before adding an interface, factory, strategy, adapter, bridge, registry,
 pipeline, context, base class, generic helper, cache, retry, fallback, or
@@ -204,7 +210,8 @@ compatibility layer, record:
 4. the concrete cost of a direct implementation;
 5. why the abstraction is easier to understand and verify now.
 
-"It may be useful later" is not sufficient.
+Prefer the direct path when it already satisfies the requirement. "It may be
+useful later" is not sufficient.
 
 ### SIMP-03 Avoid Hidden Coupling And Generic Containers
 

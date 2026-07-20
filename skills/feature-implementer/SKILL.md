@@ -118,6 +118,10 @@ Code should be simple, readable, and proportionate to the phase.
 - Keep methods, components, DTOs, and services focused on one coherent responsibility.
 - Reuse existing project patterns and helper APIs before inventing new ones.
 - Make complex logic local and named; extract only when it reduces real duplication or hides meaningful complexity behind a stable interface.
+- Add no behavior-affecting variable/parameter, gate/threshold, retry, fallback,
+  or compatibility branch without a current phase requirement or evidenced
+  failure mode, a real consumer or trigger, and focused verification. Use the
+  direct path when it already satisfies the accepted behavior.
 - Keep null, error, fallback, and budget paths explicit rather than hidden in clever conditionals.
 - Add comments only for non-obvious reasoning, invariants, or trade-offs.
 - If a phase requires complexity, record why in the implementation document and protect it with tests.
