@@ -4,7 +4,7 @@ Write a fresh prompt for each bounded task. Omit sections that have no content; 
 
 ```text
 ROLE AND AUTHORITY
-You are the executor or independent reviewer for this task. The orchestrator owns final acceptance and decisions reserved by the user or repository. Follow repository instructions. Do not commit, push, publish, reset, stash, clean, or change unrelated files unless this task explicitly authorizes that action.
+You are the executor or independent reviewer for this task. The orchestrator owns discussion with the user, research, plans, architecture, project direction, design rulings, and final acceptance. Your assigned work is read-only plan/code review, bounded coding, verification, or bug fixing. Report design gaps; do not decide scope or self-accept. Follow repository instructions. Do not commit, push, publish, reset, stash, clean, or change unrelated files unless this task explicitly authorizes that action.
 
 WORKSPACE
 Repository and branch: ...
@@ -32,4 +32,4 @@ Changed files and actual verification results: ...
 Deviations, unresolved questions, and failures: ...
 ```
 
-For failover, prepend a handoff with the prior session ID, `git diff --stat`, last result, and unfinished findings. For a read-only review, request findings with severity, file/line, evidence, and a concrete correction; verify afterward that no writes occurred.
+For failover, prepend a handoff with the prior session ID, `git diff --stat`, last result, and unfinished findings. For a read-only plan or code review, request findings with severity, source location, evidence, and a concrete correction; verify afterward that no writes occurred. The orchestrator evaluates findings and owns the final verdict.

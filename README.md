@@ -72,7 +72,7 @@ flowchart TD
 | Skill | 中文职责 | 主要产物 | 典型下一步 |
 |---|---|---|---|
 | [`agent-guidelines-init`](skills/agent-guidelines-init/SKILL.md) | 初始化 Git、生成/合并英文工程规范、审计 AI 编码忽略规则并建立 `AGENTS.md` | `ENGINEERING_STANDARDS.md`、仓库工作规范、知识台账、分支与 checkpoint 政策 | `feature-planner` |
-| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | 按用户偏好选择 CLI 执行者，交派有边界的任务并独立验证 | 派工契约、运行记录、验收证据 | 对应仓库的实施或评审流程 |
+| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | 编排者负责用户讨论、调研、架构、计划、方向和最终验收；执行者负责计划与代码评审、编码和修 bug | 派工契约、评审发现、运行记录、编排者验收证据 | 对应仓库的实施或评审流程 |
 | [`feature-planner`](skills/feature-planner/SKILL.md) | 将新需求转化为带稳定 ID、边界和架构契约的实施计划 | Plan、Architecture Contract、Acceptance IDs、Phase boundaries | `cross-review` |
 | [`cross-review`](skills/cross-review/SKILL.md) | 独立评审计划或实现，并生成防漂移 Finding Contract | `ACCEPT`、`APPLY-REVIEW-FIX` 或 `REJECT`；Finding IDs | `apply-review-fix` 或 `feature-implementer` |
 | [`apply-review-fix`](skills/apply-review-fix/SKILL.md) | 在 Finding 允许边界内完成最小修复，提供关闭证据但不自我关闭 | `READY_FOR_REVIEW`、验证与 cleanup 证据 | `cross-review` |
@@ -627,7 +627,7 @@ flowchart TD
 | Skill | Responsibility | Primary artifact | Typical handoff |
 |---|---|---|---|
 | [`agent-guidelines-init`](skills/agent-guidelines-init/SKILL.md) | Initialize Git, generate or merge English engineering standards, audit AI-coding ignore rules, and create repository guidance | `ENGINEERING_STANDARDS.md`, `AGENTS.md`, knowledge ledger, branch/checkpoint policy | `feature-planner` |
-| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | Select a CLI executor from user preferences, dispatch bounded work, and verify it independently | Dispatch contract, run record, acceptance evidence | Repository implementation or review workflow |
+| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | Orchestrator owns user discussion, research, architecture, plans, direction, and final acceptance; executors review plans and code, implement, and fix bugs | Dispatch contract, review findings, run record, orchestrator acceptance evidence | Repository implementation or review workflow |
 | [`feature-planner`](skills/feature-planner/SKILL.md) | Convert risky or unclear requests into stable, bounded implementation plans | Plan, Architecture Contract, Acceptance IDs, phase boundaries | `cross-review` |
 | [`cross-review`](skills/cross-review/SKILL.md) | Independently review a plan or implementation and issue drift-bounded findings | `ACCEPT`, `APPLY-REVIEW-FIX`, or `REJECT`; Finding IDs | `apply-review-fix` or `feature-implementer` |
 | [`apply-review-fix`](skills/apply-review-fix/SKILL.md) | Apply the smallest allowed repair without self-closing findings | `READY_FOR_REVIEW`, validation and cleanup evidence | `cross-review` |

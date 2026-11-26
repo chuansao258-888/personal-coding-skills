@@ -1,11 +1,22 @@
 ---
 name: cli-agent-orchestration
-description: Coordinate work across available CLI coding agents. Use when the user asks an orchestrator to delegate implementation, fixes, or independent review to one or more external agents; covers executor selection, bounded dispatch, monitoring, handoff, and independent verification.
+description: Orchestrate CLI coding agents while retaining ownership of user discussions, research, architecture, plans, direction, and final code acceptance. Use when delegating plan or code review, implementation, or bug fixes to external agents.
 ---
 
 # CLI Agent Orchestration
 
-Use this skill only when work will actually be delegated to another agent. The current agent is the orchestrator; the selected CLI agent is an executor or an independent reviewer. Follow the user's instructions, the target repository's guidance, and the current task contract. Project-specific roles, model preferences, build locks, acceptance gates, and checkpoint rules belong there, not here.
+Use this skill when work will be delegated to another agent. The current agent is the orchestrator. Follow the user's instructions, the target repository's guidance, and the current task contract. Project-specific model preferences, build locks, and checkpoint rules belong in that repository.
+
+## Role ownership
+
+The orchestrator must actively perform its own duties. Delegation does not transfer responsibility for the project's direction or final result.
+
+| Role | Owns |
+|---|---|
+| Orchestrator | Discuss requirements, priorities, trade-offs, architecture, and plans with the user; research and inspect evidence; write and revise the plan, architecture, and interface decisions; set task boundaries and acceptance criteria; choose and supervise executors; resolve review findings and design gaps; inspect and verify code against the agreed design; decide whether the result is accepted. |
+| Executor | Give read-only reviews of the orchestrator's plan or of code; write code within the assigned boundary; run verification; fix bugs and review findings; report evidence, deviations, and blockers. |
+
+The orchestrator writes or revises plans and architecture itself. It may ask an executor to critique them, but must evaluate that critique, decide changes, and discuss consequential decisions with the user. An executor does not set product scope, make architecture rulings, approve its own work, or declare final acceptance. When a plan or code review is needed, assign it as a bounded read-only executor task; the orchestrator still checks the evidence and owns the verdict. Never treat an executor's review or test summary as a substitute for the orchestrator's own inspection.
 
 ## Choose an executor
 
@@ -16,7 +27,7 @@ Use this skill only when work will actually be delegated to another agent. The c
 
 ## Prepare the dispatch
 
-- Inspect the repository state, task branch, relevant instructions, and existing edits. Define one bounded outcome, allowed paths, acceptance evidence, and verification commands. Record open design decisions before assigning implementation. The orchestrator owns any decisions the user or repository reserves for it.
+- Discuss unclear requirements and material trade-offs with the user. Inspect the repository state, task branch, relevant instructions, and existing edits. Research the problem, write or update the plan and architecture when needed, and define one bounded outcome, allowed paths, acceptance evidence, and verification commands. Resolve open design decisions before assigning implementation; require executors to report later design gaps for the orchestrator to resolve.
 - Use one writer per worktree. Separate concurrent writers into independent worktrees or tasks whose writes cannot overlap. Preserve unrelated changes. Keep logs and prompts in a private scratch location outside tracked files.
 - Give the executor a self-contained prompt using [the dispatch contract](references/dispatch-contract.md). Include repository rules by path and quote critical restrictions. Do not assume the executor sees this conversation.
 - Select permissions based on the task and the user's authorization. A skill is not permission to bypass approvals, alter live data, push, publish, or use unrestricted execution. Use a read-only contract for reviews.
@@ -30,6 +41,6 @@ Use this skill only when work will actually be delegated to another agent. The c
 
 ## Review and close
 
-- Treat executor reports as leads. Inspect the actual diff, status, tests, and task-specific evidence independently. A read-only reviewer must not accept its own implementation, and an implementer must not self-accept when the repository requires independent review.
+- Treat executor reports as leads. Personally inspect the actual diff, status, tests, and task-specific evidence against the plan and architecture. Check both design conformance and bugs. Obtain a separate read-only plan or code review when the task calls for one, then adjudicate its findings yourself. An executor's review never replaces final acceptance by the orchestrator.
 - For a fix round, send exact findings and current state to the same task session when appropriate. For failover, give the next executor the diff, previous report, and remaining work so it continues from the existing state.
-- Apply the target repository's review, commit, and publication policy. Do not impose a universal plan cadence, checkpoint commit, push, or PR. Tell the user what ran, what was verified, what remains, and which claims are still unverified.
+- Apply the target repository's review, commit, and publication policy. Do not impose a universal plan cadence, checkpoint commit, push, or PR. The orchestrator decides and reports acceptance only after its own checks pass. Tell the user what ran, what was verified, what remains, and which claims are still unverified.
