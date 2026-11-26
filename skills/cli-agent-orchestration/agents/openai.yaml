@@ -1,0 +1,4 @@
+interface:
+  display_name: "CLI Agent Orchestration"
+  short_description: "Delegate and verify work across coding CLIs"
+  default_prompt: "Use $cli-agent-orchestration to select an executor, dispatch bounded work, monitor it, and verify the result."

@@ -2,11 +2,12 @@
 
 [![Validate skills](https://github.com/chuansao258-888/personal-coding-skills/actions/workflows/validate-skills.yml/badge.svg)](https://github.com/chuansao258-888/personal-coding-skills/actions/workflows/validate-skills.yml)
 
-Reusable Codex skills for evidence-based planning, implementation, independent
-review, bounded repair, repository guidance, and module documentation.
+Reusable coding-agent skills for evidence-based planning, implementation,
+independent review, bounded repair, CLI orchestration, repository guidance,
+and module documentation.
 
-可复用的 Codex 技能集合，用于证据驱动的功能规划、实现、独立评审、
-范围受控的修复、仓库规范初始化和模块技术文档。
+可复用的编码 Agent 技能集合，用于证据驱动的功能规划、实现、独立评审、
+范围受控的修复、CLI 编排、仓库规范初始化和模块技术文档。
 
 - [中文说明](#中文说明)
 - [English Guide](#english-guide)
@@ -18,7 +19,7 @@ review, bounded repair, repository guidance, and module documentation.
 
 ### 1. 项目定位
 
-本仓库发布六个彼此协作的个人 Codex 技能，共同构成一套具有
+本仓库发布七个彼此协作的个人技能，共同构成一套具有
 明确入口、证据、状态和交接契约的工程循环：
 
 1. 为仓库建立可持续的 Agent 规范；
@@ -36,7 +37,7 @@ review, bounded repair, repository guidance, and module documentation.
 可复用[英文模板](skills/agent-guidelines-init/assets/ENGINEERING_STANDARDS.template.md)。
 
 仓库中的 [`skills-manifest.json`](skills-manifest.json) 是公开技能白名单。
-只有清单中的六个目录属于本仓库的发布范围；Codex 自带的 `.system`
+只有清单中的七个目录属于本仓库的发布范围；Codex 自带的 `.system`
 技能、运行时缓存和其他个人技能不得被顺带复制进来。
 
 #### Workflow Chart：先看完整工程循环
@@ -71,13 +72,14 @@ flowchart TD
 | Skill | 中文职责 | 主要产物 | 典型下一步 |
 |---|---|---|---|
 | [`agent-guidelines-init`](skills/agent-guidelines-init/SKILL.md) | 初始化 Git、生成/合并英文工程规范、审计 AI 编码忽略规则并建立 `AGENTS.md` | `ENGINEERING_STANDARDS.md`、仓库工作规范、知识台账、分支与 checkpoint 政策 | `feature-planner` |
+| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | 按用户偏好选择 CLI 执行者，交派有边界的任务并独立验证 | 派工契约、运行记录、验收证据 | 对应仓库的实施或评审流程 |
 | [`feature-planner`](skills/feature-planner/SKILL.md) | 将新需求转化为带稳定 ID、边界和架构契约的实施计划 | Plan、Architecture Contract、Acceptance IDs、Phase boundaries | `cross-review` |
 | [`cross-review`](skills/cross-review/SKILL.md) | 独立评审计划或实现，并生成防漂移 Finding Contract | `ACCEPT`、`APPLY-REVIEW-FIX` 或 `REJECT`；Finding IDs | `apply-review-fix` 或 `feature-implementer` |
 | [`apply-review-fix`](skills/apply-review-fix/SKILL.md) | 在 Finding 允许边界内完成最小修复，提供关闭证据但不自我关闭 | `READY_FOR_REVIEW`、验证与 cleanup 证据 | `cross-review` |
 | [`feature-implementer`](skills/feature-implementer/SKILL.md) | 只实现已接受阶段，完成测试、清理和架构符合性证据 | `IMPLEMENTED_PENDING_REVIEW`、测试、实现记录 | `cross-review` |
 | [`module-introduction`](skills/module-introduction/SKILL.md) | 基于代码证据编写完整中文模块介绍与可追问面试答案，解释架构、选型、实现、取舍和演进 | 模块 README/架构说明/面试答案、Mermaid 或必要图片 | 文档评审或交付 |
 
-六个技能共同遵守 `SIMP-02`：新增变量或参数、门槛或阈值、重试或兜底时，
+七个技能共同遵守 `SIMP-02`：新增变量或参数、门槛或阈值、重试或兜底时，
 必须有当前需求或已证实故障场景，并能指向实际消费者、触发条件和验证证据。
 直接路径已满足需求时，不再为假设的未来场景增加控制面。
 
@@ -463,7 +465,7 @@ Set-Location .\personal-coding-skills
 
 脚本会：
 
-1. 先验证仓库中的六个技能；
+1. 先验证仓库中的七个技能；
 2. 把已存在的同名目录移动到带时间戳的备份目录；
 3. 默认创建目录 Junction，使 Codex 与 Git 仓库读取同一份文件；
 4. 创建失败时恢复刚移动的原目录；
@@ -478,6 +480,10 @@ Set-Location .\personal-coding-skills
 ```
 
 不要同时把同名技能链接到两个发现目录，否则选择器可能显示重复技能。
+仅安装编排技能可加 `-SkillNames cli-agent-orchestration`。Claude Code、
+Qoder 和 Antigravity 可用同一脚本指定各自的用户级发现目录；Qwen Code
+使用 `qwen skills link -s user <本仓库的技能目录> --consent`。这些链接读取
+同一 Git 工作树。
 `Copy` 模式不会实时同步，只在系统不支持链接时临时使用：
 
 ```powershell
@@ -493,7 +499,7 @@ Set-Location .\personal-coding-skills
 ```
 
 该脚本只接受干净工作树，并使用 `git pull --ff-only`；它不会覆盖、stash、
-reset 或丢弃本地修改。拉取后会自动验证六个技能。使用 Junction 或
+reset 或丢弃本地修改。拉取后会自动验证七个技能。使用 Junction 或
 SymbolicLink 时，Codex 立即看到仓库中的新内容；若 UI 未刷新，重启 Codex。
 
 #### 6.2 发布本地技能修改
@@ -548,7 +554,7 @@ GitHub Actions 在 `main` push 和所有 pull request 上运行相同验证。
 
 ### 8. 安全与发布边界
 
-- 只发布 [`skills-manifest.json`](skills-manifest.json) 中的六个技能；
+- 只发布 [`skills-manifest.json`](skills-manifest.json) 中的七个技能；
 - 不发布 `.system`、插件缓存、运行时依赖或第三方技能副本；
 - 不发布真实 secret、私有日志、用户数据、简历和组织内部文档；
 - `agents/openai.yaml` 中只写 UI metadata 和公开依赖声明；
@@ -566,7 +572,7 @@ GitHub Actions 在 `main` push 和所有 pull request 上运行相同验证。
 
 ### 1. Purpose
 
-This repository publishes six cooperating personal Codex skills. Together they
+This repository publishes seven cooperating personal coding-agent skills. Together they
 form an evidence-based engineering loop with explicit entry gates, states,
 artifacts, review ownership, and handoffs:
 
@@ -586,7 +592,7 @@ publishes a reusable [English template](skills/agent-guidelines-init/assets/ENGI
 with the same stable rule system.
 
 [`skills-manifest.json`](skills-manifest.json) is the publication allowlist.
-Only those six directories belong in this repository. Codex-managed `.system`
+Only those seven directories belong in this repository. Codex-managed `.system`
 skills, runtime caches, and unrelated personal skills are explicitly excluded.
 
 #### Workflow Chart: See the Engineering Loop First
@@ -621,13 +627,14 @@ flowchart TD
 | Skill | Responsibility | Primary artifact | Typical handoff |
 |---|---|---|---|
 | [`agent-guidelines-init`](skills/agent-guidelines-init/SKILL.md) | Initialize Git, generate or merge English engineering standards, audit AI-coding ignore rules, and create repository guidance | `ENGINEERING_STANDARDS.md`, `AGENTS.md`, knowledge ledger, branch/checkpoint policy | `feature-planner` |
+| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | Select a CLI executor from user preferences, dispatch bounded work, and verify it independently | Dispatch contract, run record, acceptance evidence | Repository implementation or review workflow |
 | [`feature-planner`](skills/feature-planner/SKILL.md) | Convert risky or unclear requests into stable, bounded implementation plans | Plan, Architecture Contract, Acceptance IDs, phase boundaries | `cross-review` |
 | [`cross-review`](skills/cross-review/SKILL.md) | Independently review a plan or implementation and issue drift-bounded findings | `ACCEPT`, `APPLY-REVIEW-FIX`, or `REJECT`; Finding IDs | `apply-review-fix` or `feature-implementer` |
 | [`apply-review-fix`](skills/apply-review-fix/SKILL.md) | Apply the smallest allowed repair without self-closing findings | `READY_FOR_REVIEW`, validation and cleanup evidence | `cross-review` |
 | [`feature-implementer`](skills/feature-implementer/SKILL.md) | Implement an accepted phase with tests, cleanup, and conformance evidence | `IMPLEMENTED_PENDING_REVIEW`, implementation record | `cross-review` |
 | [`module-introduction`](skills/module-introduction/SKILL.md) | Produce a complete Chinese module walkthrough and evidence-backed interview answers that explain architecture, choices, implementation, trade-offs, and evolution | Module README, architecture/parameter/code analysis, interview answers | Documentation review or delivery |
 
-All six skills follow `SIMP-02`. A new variable or parameter, gate or threshold,
+All seven skills follow `SIMP-02`. A new variable or parameter, gate or threshold,
 retry, or fallback needs a current requirement or evidenced failure mode plus a
 real consumer, trigger, and verification evidence. When the direct path already
 meets the requirement, do not add control surfaces for hypothetical future use.
@@ -906,6 +913,11 @@ location:
 
 Do not install the same names into both discovery roots. `Copy` mode is
 available as a non-synchronizing fallback when links are unavailable.
+Use `-SkillNames cli-agent-orchestration` to install only the orchestration
+skill. The same script can target the user-level discovery directories for
+Claude Code, Qoder, and Antigravity. For Qwen Code, run
+`qwen skills link -s user <repository skill directory> --consent`.
+All links read the same Git working tree.
 
 ### 6. Updating and Publishing
 
@@ -960,7 +972,7 @@ requests.
 
 ### 8. Security and Publication Boundary
 
-- Publish only the six manifest entries.
+- Publish only the seven manifest entries.
 - Do not publish `.system`, plugin caches, runtime dependencies, or copied
   third-party skills.
 - Do not publish secrets, private logs, user data, resumes, provider payloads,

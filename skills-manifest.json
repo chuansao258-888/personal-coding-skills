@@ -10,6 +10,10 @@
       "path": "skills/apply-review-fix"
     },
     {
+      "name": "cli-agent-orchestration",
+      "path": "skills/cli-agent-orchestration"
+    },
+    {
       "name": "cross-review",
       "path": "skills/cross-review"
     },

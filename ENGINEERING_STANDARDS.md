@@ -24,7 +24,7 @@ rules into multiple documents.
 
 ## Project Profile
 
-- Purpose: publish six reusable Codex skills with deterministic validation,
+- Purpose: publish seven reusable coding-agent skills with deterministic validation,
   safe Windows linking, and bilingual user documentation.
 - Primary languages and formats: Markdown, YAML, JSON, Python 3, and PowerShell.
 - Required validation commands: `python scripts/validate_skills.py`,

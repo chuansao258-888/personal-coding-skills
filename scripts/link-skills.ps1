@@ -3,6 +3,7 @@ param(
     [string]$DiscoveryRoot = (Join-Path $HOME '.codex\skills'),
     [ValidateSet('Junction', 'SymbolicLink', 'Copy')]
     [string]$Mode = 'Junction',
+    [string[]]$SkillNames,
     [switch]$ReplaceExisting
 )
 
@@ -10,15 +11,23 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $manifest = Get-Content -Raw -Encoding utf8 -LiteralPath (Join-Path $repoRoot 'skills-manifest.json') |
     ConvertFrom-Json
+$entries = @($manifest.skills)
+if ($SkillNames) {
+    $unknown = @($SkillNames | Where-Object { $_ -notin @($entries.name) })
+    if ($unknown.Count -gt 0) {
+        throw "Skill not in manifest: $($unknown -join ', ')"
+    }
+    $entries = @($entries | Where-Object { $_.name -in $SkillNames })
+}
 $resolvedDiscoveryRoot = [System.IO.Path]::GetFullPath($DiscoveryRoot)
-$backupRoot = Join-Path $HOME ("codex-skill-backups\" + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+$backupRoot = Join-Path $HOME ("agent-skill-backups\" + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
 $backupCreated = $false
 
 & (Join-Path $PSScriptRoot 'validate-skills.ps1')
 
 New-Item -ItemType Directory -Force -Path $resolvedDiscoveryRoot | Out-Null
 
-foreach ($entry in $manifest.skills) {
+foreach ($entry in $entries) {
     $source = (Resolve-Path (Join-Path $repoRoot $entry.path)).Path
     $destination = Join-Path $resolvedDiscoveryRoot $entry.name
     $movedBackup = $null

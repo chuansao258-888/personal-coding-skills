@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the six published Codex skills without third-party dependencies."""
+"""Validate the published coding-agent skills without third-party dependencies."""
 
 from __future__ import annotations
 
