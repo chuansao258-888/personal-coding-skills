@@ -25,7 +25,7 @@ When the user delegates decisions ("decide yourself, report afterwards"), make t
 1. Use the user's current choice of executor, model, and effort, including choices made earlier in the conversation, for related dispatches until changed. Do not re-ask because a fix round starts. Honour stated routing preferences (e.g. "use X more").
 2. If a choice is missing, ask once before the first dispatch, offering the usable local CLIs and a recommended default. If the user delegates or does not answer, choose and report.
 3. Discover installed CLIs and their current help and model lists. Smoke-test exact syntax and the model name with a one-line prompt when uncertain — names that look alike (built-in vs. custom models, effort spellings) often differ.
-4. Learn each executor's limits and route around them: context size (long tasks end early), per-command time caps (some runners stop synchronous commands after tens of seconds, so full test suites never finish inside them), quota. Give such executors bounded slices and run the full suites yourself or on an executor without the cap.
+4. Learn each executor's real limits and route around them: context size (long tasks end early) and quota. Before believing an executor's claim about a tool limit ("commands are cut off after N seconds"), read the raw tool log — models sometimes misreport a yield/poll window or a lost result as a hard cap. If long commands are slow for a CLI, ask it to set an explicit long timeout and to report the raw summary lines; otherwise run the full suites yourself.
 5. On failure, quota exhaustion, or a stalled session, classify the cause, preserve the work, and fail over to another suitable CLI with the same contract plus a handoff. Report the switch. Do not silently replace a user-mandated model.
 
 ## Prepare the dispatch
@@ -33,7 +33,7 @@ When the user delegates decisions ("decide yourself, report afterwards"), make t
 - Settle open design decisions before assigning implementation. Inspect the repository state, branch, instructions, and existing edits. Define one bounded outcome, allowed paths, acceptance evidence, and verification commands.
 - One writer per worktree. Give concurrent writers separate worktrees on separate branches whose files do not overlap; sequence tasks that touch the same files. Share heavy dependency folders by link rather than reinstalling, and remove worktrees only with a method that cannot follow such links into the main checkout.
 - Write a self-contained prompt with [the dispatch contract](references/dispatch-contract.md). Cite repository rules by path, quote critical restrictions, and list every test the executor must write — executors under-deliver tests that are not enumerated.
-- Size the task to the executor: one round = implement OR tests-plus-verification for executors with small context or command caps; a fresh session per slice beats resuming an exhausted one.
+- Size the task to the executor: one round = implement OR tests-plus-verification for executors with small context; a fresh session per slice beats resuming an exhausted one.
 - Select permissions from the task and the user's authorization. A skill is never permission to bypass approvals, alter live data, push, or publish. Use a read-only contract for reviews and audits.
 
 ## Run and monitor
@@ -47,7 +47,7 @@ When the user delegates decisions ("decide yourself, report afterwards"), make t
 
 ## Review and close
 
-- Treat executor reports as leads. Inspect the actual diff, tests, screenshots, and runtime behaviour against the plan and architecture yourself, for design conformance and bugs. Re-run the full verification yourself before accepting; executor summaries are not evidence.
+- Treat executor reports as leads. Inspect the actual diff, tests, screenshots, and runtime behaviour against the plan and architecture yourself, for design conformance and bugs. Re-run the full verification yourself before accepting; executor summaries are not evidence — when a report and the raw tool log disagree, the raw log wins.
 - Check test strength, not just colour: a geometry or alignment test that compares containers which are equal by construction passes vacuously. Prefer measurements of the rendered content.
 - Verify across every stack a change touches. A backend change that regenerates shared types or IPC bindings must also pass the frontend's type check and tests before merge.
 - Check boundaries an executor tends to cross: OS/FFI code in non-platform layers, shell edits that rewrite line endings, machine-specific absolute paths in tracked files, dead code left behind.

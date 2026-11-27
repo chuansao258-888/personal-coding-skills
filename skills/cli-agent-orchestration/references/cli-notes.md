@@ -14,7 +14,7 @@ Choose model and effort flags from current help. Some CLIs encode effort in mode
 
 ## Known pitfalls
 
-- **Per-command time caps.** Some executor runners stop each synchronous command after a short limit (tens of seconds). Full test suites then never complete inside the executor; it reports "blocked" or partial results. Ask it for targeted tests and run the full suite yourself.
+- **Misreported tool limits.** An executor may claim its commands are cut off after a fixed time (e.g. "30 s execution boundary") when the raw log shows the command finished and printed its result; a yield/poll window in the CLI's exec tool can be misread as a kill. Check the raw log (`succeeded/exited in N ms`, raw test summary, or `--json` event stream with the tool's timeout argument) before routing around a supposed cap, and never repeat an unverified limit in later prompts — the executor will obey it.
 - **Context exhaustion.** Long sessions end early with partial edits. Resuming an exhausted session tends to stop again quickly; start a fresh session with a handoff instead, and check for half-applied edits first.
 - **Shell path rewriting.** Git Bash / MSYS rewrites arguments that look like POSIX paths (e.g. `cmd /c` becomes `cmd C:/`). Set `MSYS_NO_PATHCONV=1` or double the slash when passing Windows switches through it, and confirm the command actually ran.
 - **Line-ending rewrites.** Bulk edits through shell cmdlets (e.g. PowerShell `Set-Content`) can convert a whole file's line endings and inject literal escape sequences. Tell executors to edit with their patch tool.
