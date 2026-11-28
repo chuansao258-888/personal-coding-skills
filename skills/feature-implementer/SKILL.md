@@ -293,6 +293,15 @@ Tests should prove the behavior that matters:
 
 Avoid tests that only prove mocks were called when the contract depends on the data that was passed.
 
+- Name tests after the behaviour-contract rule IDs they prove.
+- A failing existing test is a contract: fix the code, or stop and report the
+  conflict with the plan. Never loosen assertions or edit shared fixtures outside
+  the task to make it pass.
+- Tests run silently: headless browsers, recording ports instead of real shell,
+  file picker, or opener calls, and every async wait bounded by a timeout.
+- Before reporting, run the complete test set of every package you touched (not
+  only the edited files) synchronously, and quote the raw summary lines.
+
 ## Layered Verification
 
 Verify from narrow to broad:

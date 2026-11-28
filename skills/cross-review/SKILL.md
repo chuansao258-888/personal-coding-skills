@@ -264,11 +264,23 @@ Review new files, directories, language pairs, fixtures, generated outputs, and 
 - Are public API, SSE, DTO, database, and prompt contracts consistent between backend, frontend, tests, and docs?
 - Are feature flags, execution modes, budgets, retries, fallback paths, and error paths wired end to end?
 - Are internal messages, traces, logs, tool arguments, prompts, and provider responses sanitized according to privacy expectations?
+- Did the review read the core changed functions and trace the runtime path
+  (thread, surface, data flow, second page, restart, error, navigation) for each
+  behaviour-contract rule, with a per-rule verdict? Green tests and screenshots
+  alone do not prove the approach.
+- Watch for wrong-approach patterns: ordering applied per page instead of
+  globally, keyset comparators without a unique tiebreak, state reset on mount
+  that defeats a cache, a change that reverses a recorded ruling or gate, shared
+  fixtures edited outside the task, dead code that would reintroduce rejected
+  behaviour.
+- Does every contract rule have a test, and every new test a rule?
+- Was a failing test loosened instead of the code fixed, or changed without a
+  recorded ruling that superseded the old design?
 - Are tests strong enough to fail if the reviewed behavior regresses?
 - Do tests assert behavior and payloads, not only that mocks were called?
 - Are ordering-sensitive flows tested with exact order assertions?
 - Are wrong-turn, wrong-session, disabled, unavailable, empty, malformed, and boundary cases covered where relevant?
-- For UI changes, was rendered behavior checked locally, including browser console errors, or is the limitation explicitly documented?
+- For UI changes, was rendered behavior checked locally, including browser console errors, or is the limitation explicitly documented? Were headless screenshots of each affected screen at a wide and a narrow width reviewed for alignment, overlap, and duplicate controls?
 - Are implementation docs updated with accurate verification results and remaining manual checks?
 - Was durable, verified project knowledge or a recurring pitfall discovered? If
   so, is project-level `AGENTS.md` updated with fact, action, and evidence,

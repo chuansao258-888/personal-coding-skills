@@ -138,6 +138,18 @@ When the feature touches one of these areas, the plan must include the correspon
   owner, authoritative rule location, existing and added dependency direction,
   public API impact, transaction/concurrency boundary, failure/fallback
   semantics, change-locality boundary, and cleanup of superseded authority.
+- Behaviour contract: for each module the feature touches, numbered MUST rules
+  with stable IDs, the structure (owners, files, module layout), and the test
+  that proves each rule. Implementation, review, and acceptance cite these IDs.
+- Reference parity: when the product mirrors a reference implementation, a
+  rule-by-rule comparison with it; divergences resolve to the reference's
+  observed behaviour unless the user decided otherwise (evidence order: live
+  observation, reference static analysis, third-party code, legacy code).
+- Background work, caching, and performance: event- or user-triggered refresh
+  with long intervals that stop when idle (justify any faster cadence); start
+  from the reference's caching strategy; name the measurements, the baseline
+  taken before the change, and a per-rule status (planned / implemented /
+  verified-live).
 - Definition of Done: tests, build/typecheck, documentation updates, review, manual E2E, and known blockers.
 
 If one of these gates applies but cannot be specified safely, ask the user before finalizing the plan.
@@ -339,6 +351,8 @@ Use this template:
 | UI behavior |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
 | Dependency / library |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
 | Security / permission |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
+
+When the user wants parity with the reference, a conflict between the reference's observed behavior and the current design or an earlier ruling resolves to the reference; record that decision with its evidence in the plan or interface spec.
 
 Use `Adopt` only when the reference behavior fits the repository without changing project architecture or user-approved scope. Use `Adapt` when the idea is useful but must follow repository conventions. Use `Reimplement` when the behavior is needed but the reference code or design should not be copied. Use `Reject` when it conflicts with the repository. Use `Defer` when it is useful but outside the current phase.
 

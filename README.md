@@ -72,7 +72,7 @@ flowchart TD
 | Skill | 中文职责 | 主要产物 | 典型下一步 |
 |---|---|---|---|
 | [`agent-guidelines-init`](skills/agent-guidelines-init/SKILL.md) | 初始化 Git、生成/合并英文工程规范、审计 AI 编码忽略规则并建立 `AGENTS.md` | `ENGINEERING_STANDARDS.md`、仓库工作规范、知识台账、分支与 checkpoint 政策 | `feature-planner` |
-| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | 编排者负责用户讨论、调研、架构、计划、方向和最终验收；执行者负责计划与代码评审、编码和修 bug | 派工契约、评审发现、运行记录、编排者验收证据 | 对应仓库的实施或评审流程 |
+| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | 编排者负责用户讨论、调研、架构、计划、方向和最终验收；执行者负责计划与代码评审、编码和修 bug | 行为契约与派工契约、批量验证与失败分诊、逐条逻辑审查、运行记录、编排者验收证据 | 对应仓库的实施或评审流程 |
 | [`feature-planner`](skills/feature-planner/SKILL.md) | 将新需求转化为带稳定 ID、边界和架构契约的实施计划 | Plan、Architecture Contract、Acceptance IDs、Phase boundaries | `cross-review` |
 | [`cross-review`](skills/cross-review/SKILL.md) | 独立评审计划或实现，并生成防漂移 Finding Contract | `ACCEPT`、`APPLY-REVIEW-FIX` 或 `REJECT`；Finding IDs | `apply-review-fix` 或 `feature-implementer` |
 | [`apply-review-fix`](skills/apply-review-fix/SKILL.md) | 在 Finding 允许边界内完成最小修复，提供关闭证据但不自我关闭 | `READY_FOR_REVIEW`、验证与 cleanup 证据 | `cross-review` |
@@ -140,7 +140,9 @@ flowchart TD
 - 为每个非平凡阶段定义 `Allowed / Not Allowed / Deferred`；
 - 写出 Architecture Contract：能力所有者、状态所有者、权威规则、依赖方向、
   事务/并发/幂等边界、失败语义、清理和所需证据；
-- 按可独立验证的垂直切片拆分实现，避免按技术层一次性铺开全部后端或前端。
+- 按可独立验证的垂直切片拆分实现，避免按技术层一次性铺开全部后端或前端；
+- 为涉及的模块写行为契约（带稳定 ID 的 MUST 规则、结构、对应测试）；有参考实现时逐条对比，冲突以参考实现的实际行为为准；
+- 后台任务、缓存和性能先按参考实现的策略来，写明测量方法、改动前基线和逐条状态（planned / implemented / verified-live）。
 
 **边界与输出**
 
@@ -169,6 +171,8 @@ Not Allowed / Deferred、测试、清理和 checkpoint 门槛，不要开始编�
   分阶段边界和风险；不要求不存在的代码或构建结果。
 - **Implementation Review**：检查实现是否满足批准计划、是否存在 bug、漂移、
   隐私/安全问题、无价值复杂度、测试不足或清理遗漏。
+  必须读核心改动函数、按行为契约逐条追踪运行路径（测试和截图本身不算验收），
+  识别错误思路模式和被放松的测试；UI 改动需审阅宽、窄两种宽度的截图。
 
 每次评审都分开执行：
 
@@ -627,7 +631,7 @@ flowchart TD
 | Skill | Responsibility | Primary artifact | Typical handoff |
 |---|---|---|---|
 | [`agent-guidelines-init`](skills/agent-guidelines-init/SKILL.md) | Initialize Git, generate or merge English engineering standards, audit AI-coding ignore rules, and create repository guidance | `ENGINEERING_STANDARDS.md`, `AGENTS.md`, knowledge ledger, branch/checkpoint policy | `feature-planner` |
-| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | Orchestrator owns user discussion, research, architecture, plans, direction, and final acceptance; executors review plans and code, implement, and fix bugs | Dispatch contract, review findings, run record, orchestrator acceptance evidence | Repository implementation or review workflow |
+| [`cli-agent-orchestration`](skills/cli-agent-orchestration/SKILL.md) | Orchestrator owns user discussion, research, architecture, plans, direction, and final acceptance; executors review plans and code, implement, and fix bugs | Behaviour and dispatch contracts, batch verification with failure triage, rule-by-rule logic review, run record, orchestrator acceptance evidence | Repository implementation or review workflow |
 | [`feature-planner`](skills/feature-planner/SKILL.md) | Convert risky or unclear requests into stable, bounded implementation plans | Plan, Architecture Contract, Acceptance IDs, phase boundaries | `cross-review` |
 | [`cross-review`](skills/cross-review/SKILL.md) | Independently review a plan or implementation and issue drift-bounded findings | `ACCEPT`, `APPLY-REVIEW-FIX`, or `REJECT`; Finding IDs | `apply-review-fix` or `feature-implementer` |
 | [`apply-review-fix`](skills/apply-review-fix/SKILL.md) | Apply the smallest allowed repair without self-closing findings | `READY_FOR_REVIEW`, validation and cleanup evidence | `cross-review` |
@@ -675,6 +679,12 @@ Every non-trivial phase receives an Architecture Contract plus explicit
 verification, cleanup, and checkpoint expectations. Blocking Open Questions,
 Options, or TBDs prevent the plan from being declared implementation-ready.
 
+Touched modules get a behaviour contract (numbered MUST rules with stable IDs,
+structure, and the test for each rule). With a reference implementation, the plan
+compares rule by rule and resolves conflicts to the reference's observed
+behaviour. Background work, caching, and performance start from the reference's
+strategy, with named measurements, a pre-change baseline, and a per-rule status.
+
 ```text
 Use $feature-planner to plan <feature>. Define stable Acceptance IDs, an
 Architecture Contract, vertical phases, Allowed/Not Allowed/Deferred boundaries,
@@ -686,7 +696,10 @@ tests, cleanup, and checkpoint gates. Do not implement yet.
 Use this skill for Plan Review, Implementation Review, or re-review of an
 `apply-review-fix` pass. Every review separates Spec conformance from Standards
 conformance, including explicit Architecture, Consistency, and Simplicity
-checks.
+checks. Implementation Review reads the core changed functions and traces the
+runtime path rule by rule (tests and screenshots alone are not acceptance), flags
+wrong-approach patterns and loosened tests, and requires wide and narrow
+screenshots for UI changes.
 
 Actionable findings follow the complete
 [`finding-contract.md`](skills/cross-review/references/finding-contract.md):
