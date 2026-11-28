@@ -447,6 +447,8 @@ Validation 与 Cleanup，返回 READY_FOR_REVIEW。
 - 新功能、跨模块、架构、安全、数据、provider、异步或用户可见行为，默认
   使用完整循环；
 - `module-introduction` 通常位于实现接受之后，不用于代替尚未完成的实现。
+- 使用 `cli-agent-orchestration` 时按三档执行：小（单行修复、按既有裁定对齐测试、删死代码）由编排者直接改或合并成一次派工；中（单模块内有契约的修复/功能）裁定 → 派工 → 逻辑审查 → 合并；大（新模块、跨模块或高风险）走完整循环；
+- 全量测试每批只跑一次，修复后只重跑失败目标，合并前再跑一次全量。
 
 ### 5. 安装与本地链接
 
@@ -894,6 +896,13 @@ Do not skip the re-review after a repair whenever Finding closure, acceptance,
 or checkpoint creation matters. Small, behavior-neutral edits may use a shorter
 path; cross-module, architectural, security, data, provider, asynchronous, and
 user-visible work should default to the full loop.
+
+With `cli-agent-orchestration`, size the process in three tiers: small (one-line
+fix, tests aligned to an existing ruling, dead-code removal) is a direct
+orchestrator edit or one batched dispatch; medium (a contracted fix or feature in
+one module) is ruling → dispatch → logic review → merge; large (new module,
+cross-module, risky) uses the full loop. Run the full suite once per batch, rerun
+only failed targets after a fix, and run it once more before the final merge.
 
 ### 5. Installation and Linking
 

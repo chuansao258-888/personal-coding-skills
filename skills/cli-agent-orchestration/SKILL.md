@@ -14,7 +14,19 @@ The current agent is the orchestrator. Follow the user's instructions, the repos
 | Orchestrator | User discussion, research, plans, architecture, interface specs, behaviour contracts, design rulings, executor choice and supervision, reading and judging the code, final acceptance. |
 | Executor | Bounded coding, bug fixing, verification, and read-only plan or code review. Reports evidence, deviations, and design gaps; never sets scope, rules on design, or accepts its own work. |
 
+**Direct small edits.** The orchestrator may itself make a change of roughly ten lines or fewer that implements a ruling it already wrote, or that only aligns tests with a recorded ruling — a full dispatch (worktree, prompt, run, review, cleanup) costs more than the change and adds risk. Anything larger, or any new behaviour, goes to an executor. Verify direct edits exactly as executor work.
+
 Write plans and specs yourself; an executor may only critique them. When the user delegates decisions ("decide, report afterwards"), decide conservatively, record the ruling with its date and evidence in the plan, and report it. Still ask before irreversible actions on real data, installs, publishing or pushing, and anything that reverses an explicit user decision.
+
+## Size the process to the task
+
+| Tier | Example | Process |
+|---|---|---|
+| Small | one-line fix, test aligned to a ruling, dead-code removal | Direct edit or one batched dispatch → targeted tests → full run with the batch |
+| Medium | a bounded fix or feature inside one module with a contract | Ruling → dispatch → logic review → merge |
+| Large | new module, cross-module or risky change | Plan → read-only plan review → dispatch → logic review → fix rounds → acceptance |
+
+Batch several small items into one dispatch. Combine "audit + write the missing tests" into one task; split a separate fix round only when the audit finds a business defect.
 
 ## Before dispatch: contract first
 
@@ -22,7 +34,7 @@ Loose rulings produce code that passes tests with the wrong approach. Before any
 
 1. **Behaviour contract.** Write or update the module's contract in the repository: structure (owners, files), numbered MUST rules with stable IDs, and the acceptance test that proves each rule. A rule without a test, or a test without a rule, is a finding.
 2. **Reference comparison.** When the product mirrors a reference implementation (an official client, upstream behaviour), add a rule-by-rule comparison. Resolve divergences to the reference's observed behaviour unless the user decided otherwise. Rank evidence live observation > reference static analysis > third-party code > legacy code. Start caching and performance work from the reference's strategy, measure, then optimize.
-3. **Written ruling.** Every design or performance discussion with the user becomes a dated ruling (user's words plus evidence) before dispatch. Diagnose user-reported bugs against the running app (logs, debug port, measurements) and name the faulty code path in the ruling.
+3. **Written ruling, one home.** Every design or performance discussion with the user becomes a dated ruling (user's words plus evidence) before dispatch. Each ruling lives in exactly one document (the module contract or the interface spec); plans and other docs link to it instead of restating it, so copies cannot drift. Diagnose user-reported bugs against the running app (logs, debug port, measurements) and name the faulty code path in the ruling.
 4. **Structure.** Plans and dispatches state the module layout and the repository's file-size and layering rules, so god files never form. Schedule splits after the current writer merges.
 5. **Docs hygiene.** While researching or writing docs, move outdated documents to an archive folder with an index and repoint links; never silently delete them.
 
@@ -32,10 +44,12 @@ Loose rulings produce code that passes tests with the wrong approach. Before any
 - Read each CLI's help and model list; smoke-test the exact model string (built-in and custom names look alike). Learn each one's limits: context (long tasks stop early, so slice the work: implement OR tests-plus-verify, fresh session per slice) and quota.
 - On failure, quota exhaustion, or a stall: preserve the work, record the quota reset time, and fail over with the same contract plus a handoff. Never silently replace a model the user mandated.
 - Never believe an executor's claim about tool limits without reading the raw log.
+- Route by observed reliability: an executor that repeatedly ends before its verification finishes gets only read-only or verification-free work.
 
 ## Dispatch
 
 - Use [the dispatch contract](references/dispatch-contract.md): cite rule IDs and repository rules by path, quote critical restrictions, and name every test to write — unnamed tests are under-delivered.
+- Start a task only on a base that already contains the fixes it depends on (test journeys after the fixes they exercise); otherwise it rediscovers fixed defects.
 - One writer per worktree; parallel writers get separate worktrees and branches with disjoint files. Share heavy dependency folders by link, and remove worktrees only with a method that cannot follow those links.
 - Permissions follow the task and the user's authorization; reviews and audits are read-only. A skill never authorizes pushing, publishing, or touching live data.
 - Tests are silent: headless browsers, recording ports instead of real shell, picker, or opener calls, no windows on the user's desktop.
@@ -44,7 +58,7 @@ Loose rulings produce code that passes tests with the wrong approach. Before any
 
 - Use each CLI's noninteractive syntax ([CLI notes](references/cli-notes.md)); close stdin; record CLI, model, worktree, session and process IDs, start time, output file, and result. Resume only by explicit session ID of the same task.
 - Every run has a wall-clock limit; compile-heavy commands also go through the repository's build lock and watchdog, with build parallelism capped through the environment. Executors run verification synchronously — never in their own background before exiting.
-- Check progress about every 10 minutes (output tail, worktree diff, liveness), not every turn; rely on completion notifications in between and do useful work meanwhile. Treat a run as stuck when output is unchanged ≈10 min and a second signal agrees (no CPU, no worktree writes); kill the process tree, keep artifacts, fail over.
+- Check progress about every 10 minutes (output tail, worktree diff, liveness), not every turn; rely on completion notifications in between and do useful work meanwhile. To wait for a condition (a build finishing, a file shrinking, a state change), use one background check that exits when the condition holds, not a monitor that reports every minute. Treat a run as stuck when output is unchanged ≈10 min and a second signal agrees (no CPU, no worktree writes); kill the process tree, keep artifacts, fail over.
 - Respect the user's cap on parallel executors and check free memory first; after a host reap, inspect each worktree before re-dispatching and kill orphans.
 - Unattended goals: keep the dispatch → review → merge loop going at the user's parallelism cap, decide per the delegation rule, and resume after quota refreshes instead of stopping.
 
@@ -57,6 +71,8 @@ Triage each failure of the full run:
 - **Regression** from a merged change → fix the business code (finding to the owner).
 - **Outdated test** encoding a superseded design → the orchestrator records a ruling, then the test is updated to it. Executors never loosen a failing test on their own.
 - **Flake** → rerun that spec alone; accept only when green, and note it.
+
+After fixing, rerun only the failed targets plus anything sharing their files; run the full suite once more only before the final merge. Each full run costs minutes, so never run it after every small fix.
 
 ## Review and accept
 
@@ -73,13 +89,13 @@ Executor reports and green tests are leads, not evidence. An executor's "fixed /
 
 **Test strength:** a geometry test comparing containers equal by construction passes vacuously; prefer measurements of rendered content.
 
-**UI merges:** take headless screenshots of each affected screen at a wide and a narrow width, review alignment, overlap, and duplicate controls (check visibility — kept-alive hidden views make locators ambiguous), and show the key ones to the user.
+**UI merges:** with one reusable screenshot script kept in the repository, take headless screenshots of each affected screen at a wide and a narrow width, review alignment, overlap, and duplicate controls (check visibility — kept-alive hidden views make locators ambiguous), and show the key ones to the user.
 
 **Status:** keep a per-rule status in the plan — planned / implemented / verified-live / defect — with commit and evidence. Merged-and-green is only *implemented*; *verified-live* needs a measurement in the real app, taken against a baseline captured before the change. A user-reported symptom in an *implemented* area is an acceptance defect.
 
 ## Close
 
-- Rebase onto the current mainline, re-verify, then fast-forward. Follow the repository's commit and publication policy.
+- Rebase onto the current mainline, re-verify, then fast-forward. Move secondary refs (e.g. a local release branch) once at the end of the task, not after every merge. Follow the repository's commit and publication policy.
 - After a verified merge, delete the task branch and its worktree (keep reference branches; never delete unmerged work without confirmation).
 - After a read-only audit, confirm no writes occurred.
 - Report what ran, what you verified, the decisions you made, what remains, and which claims are still unverified.
