@@ -266,7 +266,7 @@ Evidence: public surface and the value of every added hop.
 
 ### CONS-02 Keep Contracts Consistent Across Surfaces
 
-- Keep API, DTO, event, SSE, database, prompt/tool, configuration, tests, and
+- Keep API, DTO, event or stream, database, configuration, tests, and
   documentation consistent end to end.
 - When configuration changes, update defaults, environment documentation,
   validation, and tests together without exposing secret values.

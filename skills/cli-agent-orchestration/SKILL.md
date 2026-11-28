@@ -28,6 +28,20 @@ Write plans and specs yourself; an executor may only critique them. When the use
 
 Batch several small items into one dispatch. Combine "audit + write the missing tests" into one task; split a separate fix round only when the audit finds a business defect.
 
+## Skill routing
+
+This skill is the hub; load the workflow skills explicitly — they do not load themselves.
+
+| Step | Skill |
+|---|---|
+| Large-tier plan (you write it) | `$feature-planner` |
+| Your logic review before merge | the Implementation checklist of `$cross-review` (you own the verdict) |
+| Executor implementing a phase | tell executors that support skills (e.g. Codex) to use `$feature-implementer`; for others, the dispatch contract carries its gates |
+| Executor fix round | `$apply-review-fix` the same way |
+| Accepted module walkthrough | `$module-introduction` |
+
+In orchestrated mode those skills defer rulings, acceptance, and commits to you.
+
 ## Before dispatch: contract first
 
 Loose rulings produce code that passes tests with the wrong approach. Before any executor touches a module:

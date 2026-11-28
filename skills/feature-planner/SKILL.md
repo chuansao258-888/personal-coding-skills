@@ -1,386 +1,88 @@
 ---
 name: feature-planner
-description: Use when turning a new, unclear, cross-module, risky, reference-based, or product-facing request into a cross-review-ready implementation plan. Enforce the task-branch gate and define stable acceptance IDs, Architecture Contracts, explicit Allowed/Not Allowed/Deferred boundaries, cleanup, tests, verification, and phase checkpoint gates before coding.
+description: Use when turning a new, unclear, cross-module, risky, reference-based, or product-facing request into a cross-review-ready implementation plan. Defines behaviour contracts with stable rule IDs, acceptance IDs, Architecture Contracts, Allowed/Not Allowed/Deferred phase boundaries, tests, verification, and checkpoint gates before coding.
 ---
 
 # Feature Planner
 
-Use this skill before implementation when a feature request is new, unclear, cross-module, user-facing, risky, or based on another project's design.
+Turn a rough request into a plan another agent can implement without inventing product or architecture decisions. Plan only; do not implement unless the user explicitly asks.
 
-The goal is to convert a rough idea into a clear, reviewable plan that another coding agent can implement safely.
+**Size it.** Small changes (one-line or behaviour-neutral edits, tests aligned to a recorded ruling) need no plan. Medium changes need a ruling plus the affected behaviour-contract rules. Large changes (new module, cross-module, risky, reference-based) get the full plan below.
 
-This skill is for planning only. Do not implement code unless the user explicitly asks to continue into implementation.
+## Common gates
 
-## Core Rule
+- **Branch:** start with `git status --short --branch`. Plan, implementation, fix, and re-review of one task share one branch (repository convention, else `feat/<task-slug>`). Switch or create only from a clean worktree; never stash, reset, or carry unrelated changes — use a separate worktree or ask.
+- **Source of truth:** latest explicit user instruction > approved plan > implementation record > current code > reference behaviour > general practice.
+- **Intent:** never resolve a concern by dropping, deferring, narrowing, or weakening a requested capability without the user's approval. Keep phase and acceptance IDs stable once review starts.
+- **Standards:** read `AGENTS.md`, `ENGINEERING_STANDARDS.md` (or equivalent), glossary/context files, ADRs, and the project knowledge ledger. Cite their rule IDs.
+- **Orchestrated mode:** when an orchestrator dispatched this task, it owns rulings and acceptance; report decisions and gaps to it instead of choosing.
+- Never push or open a PR unless the user asks. Never quote secret values from local configuration.
 
-Do not silently decide unclear product requirements, architecture choices, API contracts, database changes, dependencies, security behavior, privacy behavior, model/provider choices, or reference-project adaptation choices.
+## Clarification gate
 
-If one of those choices is unclear and materially affects the feature, ask the user before finalizing the plan.
+Ask before finalizing when any of these is unclear and material: the user problem and flow; scope, non-goals, deferred work; acceptance or manual checks; API, data, migration, or retention; auth, privacy, security; async, streaming, or event contracts; new dependencies or external services; configuration and defaults; how closely to follow a reference; rollback or compatibility.
 
-## Project Context
+Return blocking questions with options and a recommendation. Never present `Option A / B`, `TBD`, or a recommended-but-unconfirmed choice as implementation-ready, and never let the implementer pick.
 
-This is a generic planning skill. Do not assume a specific repository, framework, domain, documentation layout, language policy, or tech stack.
+## Workflow
 
-Before choosing files or naming, read the repository's local instructions and conventions:
+1. Understand the goal, user problem, scope, success and failure behaviour.
+2. Pass the common gates; inspect the current code and its authoritative implementation before naming files.
+3. Inspect any reference separately; separate reusable ideas from incompatible assumptions.
+4. Write the behaviour contract, acceptance IDs, Architecture Contract, and phases.
+5. Write or update the plan and implementation documents; hand off to review.
 
-- `AGENTS.md`, `CLAUDE.md`, or equivalent agent instructions.
-- `ENGINEERING_STANDARDS.md` or the repository's equivalent architecture and
-  consistency standard when present.
-- README and contributor docs.
-- Existing `docs/`, `tests/`, `examples/`, `schemas/`, `src/`, `app/`, `packages/`, or service-specific layouts.
-- Existing naming, localization, validation, and gitignore patterns.
+## What the plan must contain
 
-Generic fallback locations:
+Include each item that applies; omit the rest.
 
-- `docs/plans/<feature-slug>.md` for feature plans.
-- `docs/implementation/<feature-slug>-implementation.md` for implementation records.
-- `docs/architecture/<design-slug>.md` for architecture designs.
-- `docs/adr/ADR-NNN-<decision-slug>.md` for hard-to-reverse decisions.
-
-For file and directory naming, follow repository-local standards from `AGENTS.md`, README, contributor docs, and nearby existing files.
-
-When present and relevant, also read repository-specific context files such as:
-
-- `CONTEXT.md`, glossary files, or domain docs for project language and canonical terms.
-- `docs/adr/` for hard-to-reverse architectural decisions.
-- `docs/env_variables.txt` for local environment variable names and configuration surface when a feature touches config, providers, credentials, feature flags, or runtime defaults.
-
-Create or update glossary/context documents only when a term or decision has actually been clarified. Keep glossary files as glossaries, not implementation specs.
-
-Treat `docs/env_variables.txt` as secret-bearing local configuration. Use it to understand variable names and config coverage, but do not quote real values in plans, logs, tests, or final responses.
-
-## Task Branch Gate
-
-At the start of every distinct repository task, before editing a plan or project
-document:
-
-1. Run `git status --short --branch` and `git branch --show-current`.
-2. Identify the expected task branch from the latest user goal, approved plan,
-   and repository naming convention. Planning, implementation, review-fix, and
-   re-review for one feature stay on the same task branch.
-3. Continue when the current branch is the correct task branch.
-4. When the worktree is clean and the current branch is the default or an
-   unrelated branch, create or switch to the task branch automatically. Use the
-   repository convention; fall back to `feat/<task-slug>`.
-5. When unrelated dirty changes would be carried across branches, do not stash,
-   reset, discard, or silently transport them. Prefer a separate worktree from
-   the intended base when safe; otherwise stop and ask the user.
-
-Record the branch decision in the plan or handoff. Do not create a new branch
-for a continuation, review, or repair of the task already represented by the
-current branch.
-
-## Source Of Truth
-
-When information conflicts, follow this priority:
-
-1. Latest explicit user instruction
-2. Existing approved plan document
-3. Existing implementation document
-4. Current project code
-5. Reference project behavior
-6. General best practices
-
-Do not let older documents override newer user decisions.
-
-## Original Intent Preservation
-
-Treat the latest explicit user goal, the original problem statement, and confirmed decisions as planning constraints.
-
-- Do not resolve ambiguity, review feedback, or implementation difficulty by dropping, deferring, weakening, or converting a user-requested capability into an observation or warning unless the user explicitly approves that trade-off.
-- When revising a plan after review, compare the change against the user's stated goal and latest decisions. If the fix changes scope, acceptance gates, phase boundaries, or user-visible behavior, ask the user before finalizing.
-- If a capability is intentionally deferred, record the explicit user decision, the reason, and the phase or follow-up where it will be handled.
-- A plan is not implementation-ready if it silently closes a concern by changing what the user asked for.
-- After plan review begins, keep phase IDs and acceptance IDs stable. Do not
-  renumber or rewrite them to hide a finding; append or explicitly supersede an
-  item with the user's approval and preserve traceability.
-
-## Clarification Gate
-
-Ask the user before finalizing the plan if any of these are unclear:
-
-- User problem, target user, or expected user flow
-- In scope, out of scope, or deferred work
-- Acceptance criteria or manual E2E expectations
-- API request/response contract
-- Database schema, migration, or data-retention behavior
-- Authentication, authorization, privacy, or security behavior
-- Async jobs, queues, schedulers, streaming, SSE, or tool-calling contracts
-- New dependencies, model/provider choices, or cost-sensitive behavior
-- Environment variables, local configuration, feature flags, or runtime defaults
-- How closely to follow a reference project
-- Rollback or backward-compatibility requirements
-
-When clarification is required, do not produce a final plan. Return blocking questions, options, a recommendation if clear, and why user confirmation is needed.
-
-Do not leave blocking items in `Open Questions` while also presenting the plan as implementation-ready. Any unresolved question that can affect product behavior, architecture, API, data model, permissions, dependencies, provider/model choice, UX, tests, rollout, or implementation scope must be asked to the user and resolved before implementation can start.
-
-Do not present unresolved options as implementation-ready. If the plan includes `Option A / Option B`, alternatives, a recommendation that still needs user confirmation, or any "choose one" decision that affects implementation, ask the user to choose before coding can start. Do not let the implementer pick the option.
-
-## Production Planning Gates
-
-When the feature touches one of these areas, the plan must include the corresponding details instead of leaving them implicit:
-
-- API contract: request schema, response schema, error cases, compatibility impact, and example payloads.
-- Configuration and environment: variable names, defaults, required/optional status, secret boundaries, local/dev/prod differences, and `docs/env_variables.txt` update needs.
-- Data or migration: schema changes, migration path, backfill needs, rollback path, and old-data compatibility.
-- Security or privacy: permission checks, data exposure, logging boundaries, trace/prompt/tool/provider sanitization, and retention behavior.
-- Release or rollback: feature flags, staged rollout, fallback behavior, old-client compatibility, and how to disable the feature.
-- Observability: logs, metrics, health checks, audit/debug surfaces, and what must not be logged.
-- Implementation simplicity: expected seams, reuse of existing patterns,
-  complexity risks, and explicit non-goals for abstractions or refactors that
-  should not be introduced. Do not plan a new behavior-affecting variable or
-  parameter, gate or threshold, retry, fallback, or compatibility branch unless
-  a current requirement or evidenced failure mode needs it and the plan names
-  its real consumer or trigger and verification.
-- Code style consistency: existing naming, package/module layout, DTO/type/component/test conventions, error handling, logging, formatting, and lint/type/build expectations.
-- Architecture and consistency: business capability owner, behavior/state
-  owner, authoritative rule location, existing and added dependency direction,
-  public API impact, transaction/concurrency boundary, failure/fallback
-  semantics, change-locality boundary, and cleanup of superseded authority.
-- Behaviour contract: for each module the feature touches, numbered MUST rules
-  with stable IDs, the structure (owners, files, module layout), and the test
-  that proves each rule. Implementation, review, and acceptance cite these IDs.
-- Reference parity: when the product mirrors a reference implementation, a
-  rule-by-rule comparison with it; divergences resolve to the reference's
-  observed behaviour unless the user decided otherwise (evidence order: live
-  observation, reference static analysis, third-party code, legacy code).
-- Background work, caching, and performance: event- or user-triggered refresh
-  with long intervals that stop when idle (justify any faster cadence); start
-  from the reference's caching strategy; name the measurements, the baseline
-  taken before the change, and a per-rule status (planned / implemented /
-  verified-live).
-- Definition of Done: tests, build/typecheck, documentation updates, review, manual E2E, and known blockers.
-
-If one of these gates applies but cannot be specified safely, ask the user before finalizing the plan.
+- **Summary and decisions:** product summary, goals and non-goals, user flow, confirmed decision ledger (dated), assumptions.
+- **Current findings:** what the code does today, glossary/ADR impact.
+- **Behaviour contract** (per touched module): structure (owners, files, module layout within the repository's size and layering rules); numbered MUST rules with stable IDs; the test that proves each rule. A rule without a test, or a test without a rule, is a gap.
+- **Reference parity:** with a reference implementation, a rule-by-rule comparison and the adaptation matrix below. When the user wants parity, conflicts resolve to the reference's observed behaviour; rank evidence live observation > reference static analysis > third-party code > legacy code, and record each decision with its evidence in one place (contract or interface spec).
+- **Stable acceptance IDs** (`AC-001`) for success, failure, boundary, permission, privacy, persistence, API, and UI behaviour.
+- **Production gates:** API request/response/errors and compatibility; configuration names, defaults, secret boundaries; data migration, backfill, rollback; security, privacy, and what must never be logged; release flags and fallback; observability.
+- **Background work, caching, performance:** event- or user-triggered refresh, long intervals, stop when idle (justify any faster cadence); start from the reference's caching strategy; name measurements, the baseline taken before the change, and a per-rule status (planned / implemented / verified-live).
+- **Simplicity and style:** patterns to reuse, abstractions and refactors to avoid. Plan no new variable, gate, threshold, retry, fallback, or compatibility branch without a current requirement, a real consumer, and verification.
+- **Architecture Contract** (below) for every non-trivial phase.
+- **Phases** (below), test strategy, Definition of Done, risks, rollback.
+- **Open Questions:** `None`, or only items explicitly marked non-blocking/deferred with the reason.
 
 ## Architecture Contract
 
-For every non-trivial phase, add an `Architecture Contract` using stable rule
-IDs from the repository engineering standard. If the repository has no IDs,
-use descriptive labels without inventing a permanent architecture policy.
-
 ```text
 Business capability and owning module
-Behavior owner and state owner
-Authoritative business-rule location
-Existing dependency direction
-Allowed new dependency edges
-Forbidden dependency edges / internal surfaces
+Behaviour owner and state owner; authoritative rule location
+Existing dependency direction; allowed new edges; forbidden edges and internal surfaces
 Public API and data-model impact
-Transaction, concurrency, and idempotency boundary
+Transaction, concurrency, idempotency boundary
 Empty / rejection / failure / timeout / fallback semantics
-Existing patterns to reuse
-New abstractions or control surfaces (variables, gates, fallbacks) and
-present-value justification
-Change-locality boundary
-Cleanup of superseded code, rules, config, tests, and docs
+Existing patterns to reuse; new abstractions or control surfaces and their present justification
+Change-locality boundary; cleanup of superseded code, rules, config, tests, docs
 Verification evidence required
 ```
 
-Do not use arbitrary class-size, dependency-count, or constructor-parameter
-thresholds as acceptance gates. Treat them as investigation signals unless the
-repository has an approved measured limit.
+Treat size and dependency counts as investigation signals, not acceptance gates, unless the repository has an approved measured limit.
 
-## Planning Workflow
+## Phases
 
-1. Understand the feature goal, user problem, scope, non-goals, success criteria, and failure behavior.
-2. Pass the Task Branch Gate and read repository engineering standards,
-   glossary/context files, project knowledge/pitfalls in `AGENTS.md`, and
-   relevant ADRs when they exist.
-3. Inspect the current project before planning implementation details,
-   including nearby patterns and the current authoritative implementation.
-4. Inspect any reference project separately and identify reusable ideas versus incompatible assumptions.
-5. Compare requested behavior with current project support.
-6. Define in-scope, out-of-scope, deferred, assumptions, and constraints.
-7. Assign stable IDs to testable acceptance criteria for success, failure,
-   boundary, permission, privacy, persistence, API, UI, SSE, prompt, tool, or
-   agent contracts as relevant.
-8. Design the Architecture Contract plus backend, frontend, data, API,
-   prompt/tool/SSE, validation, error handling, logging, observability, and test
-   strategy.
-9. Split implementation into small vertical phases with explicit Allowed, Not
-   Allowed, Deferred, Cleanup, prerequisite, and acceptance-ID mappings.
-10. Create or update the planning and implementation documents.
+Each phase: stable ID, goal, Allowed / Not Allowed / Deferred, prerequisites (phases, decisions, reviews, checkpoints), Architecture Contract and rule IDs, likely files, acceptance IDs mapped to deliverables, tests to add (named), verification commands, cleanup and stale-reference checks, manual checks.
 
-## Review Handoff Contract
+Prefer narrow vertical slices through the needed layers over "all backend, then all frontend". Do not mix broad refactoring with feature delivery.
 
-Before sending a non-trivial plan to `$cross-review`, ensure it exposes:
+The implementation record tracks: phase checklist and status, review references, branch decision, conformance evidence by rule ID, finding ledger (`OPEN | READY_FOR_REVIEW | CLOSED | BLOCKED | INVALID`), files, tests, commands and results, known failures, manual checks actually done, deferred items.
 
-- latest user goal and confirmed decisions;
-- stable phase and acceptance IDs;
-- Allowed / Not Allowed / Deferred boundaries for each phase;
-- prerequisites and checkpoint expectations;
-- files/surfaces, tests, verification, cleanup, risks, and rollback;
-- Architecture Contract rule IDs and evidence expectations;
-- task branch decision and the required post-acceptance checkpoint commit;
-- unresolved questions only when explicitly non-blocking/deferred.
+## Reference adaptation matrix
 
-Treat the review recommendation as a gate:
-
-- `ACCEPT`: the approved phase may move to `$feature-implementer` when the user
-  asks.
-- `APPLY-REVIEW-FIX`: send the exact Finding IDs and Fix Specifications to
-  `$apply-review-fix`, then rerun `$cross-review`.
-- `REJECT`: resolve clarification/root-cause/plan decisions before any
-  implementation.
-
-Do not make a reviewed plan appear accepted by changing its scope, phase
-boundary, or acceptance criteria after the review. Material changes require a
-new explicit user decision and another cross-review.
-
-## Project Knowledge Handoff
-
-When planning reveals a durable, verified repository fact or recurring pitfall
-that future tasks need to know, update the project-level `AGENTS.md` knowledge
-ledger in the same planning phase. Record the fact, required action, and
-evidence location. Do not record secrets, raw payloads, temporary failures,
-speculation, or feature-specific history that belongs in the plan or
-implementation document. Consolidate an existing entry instead of duplicating
-it, and remove or supersede stale guidance when evidence changes.
-
-## Skill Handoff
-
-After producing an implementation-ready plan, route the next step deliberately:
-
-- Use `$cross-review` for plan review before implementation when the work is non-trivial, risky, cross-module, or user-facing.
-- Use `$apply-review-fix` if plan review returns concrete findings.
-- Use `$feature-implementer` only after blocking Open Questions are resolved,
-  the latest review recommendation is `ACCEPT`, and blocking Finding IDs are
-  `CLOSED`.
-
-Do not continue into implementation from this skill unless the user explicitly asks and the Open Questions gate is clear.
-
-## Phase Template
-
-Each implementation phase should include:
-
-- Stable phase ID
-- Goal
-- Allowed / in-scope files, surfaces, and behavior
-- Not Allowed / explicit non-goals for this phase
-- Deferred work with owning phase/follow-up
-- Prerequisite phases, decisions, reviews, and checkpoint commits
-- Task branch and checkpoint commit expectation
-- Architecture Contract and applicable engineering-standard rule IDs
-- Files or modules likely to change
-- Deliverables
-- Stable acceptance criteria IDs mapped to deliverables
-- Tests to add or update
-- Verification commands
-- Cleanup obligations and stale-reference checks
-- Risks or manual checks
-
-Prefer tracer-bullet vertical slices: each phase should deliver a narrow but complete behavior through the needed layers. Avoid horizontal phases such as "all backend first" or "all frontend later" unless the phase is explicitly infrastructure-only.
-
-Avoid mixing broad refactoring with feature delivery.
-
-Use repository conventions for IDs when they exist; otherwise use stable labels
-such as `AC-001` and `PHASE-02`. IDs are references, not priorities, and must not
-change merely because criteria are reordered.
-
-## Plan Document Template
-
-The plan document should include:
-
-- Product summary
-- Goals and non-goals
-- Confirmed decision ledger
-- User flow
-- Scope and deferred work
-- Stable acceptance criteria IDs
-- Current project findings
-- Domain language or ADR impact
-- Reference project findings, if any
-- Reference adaptation matrix, if a reference project is provided
-- Production planning gates that apply
-- Configuration / environment variables, if relevant
-- Implementation simplicity constraints
-- Code style constraints
-- Architecture Contract
-- Technical design
-- Implementation phases with Allowed / Not Allowed / Deferred boundaries,
-  prerequisites, acceptance-ID mappings, and cleanup obligations
-- Test strategy
-- Definition of Done
-- Risks
-- Open questions
-
-The implementation document should include:
-
-- Phase checklist
-- Review status and accepted plan/phase reference
-- Task branch decision
-- Architecture Conformance Evidence keyed by repository rule IDs
-- Finding ledger with `OPEN | READY_FOR_REVIEW | CLOSED | BLOCKED | INVALID`
-- Files changed
-- Decisions made
-- Tests added or updated
-- Verification commands
-- Known failures
-- Manual checks
-- Review history
-- Acceptance-ID evidence, boundary audit, cleanup evidence, and Closure Criteria
-  status for review-fix passes
-- Deferred items
-
-Do not create or leave blocking `Open Questions`, `Open Decisions`, `Options`, `Alternatives`, `TBD`, or `To Clarify` in the implementation document while presenting the feature or phase as ready to implement. Any unresolved item in the implementation document that can affect the current phase must be clarified with the user first, answered by a newer explicit decision, or explicitly marked non-blocking/deferred.
-
-Do not mark manual E2E checks as complete unless they were actually completed.
-
-## Open Questions
-
-Use `Open Questions` only to expose unresolved decisions honestly.
-
-- If an Open Question is blocking, stop and ask the user instead of finalizing the plan.
-- If the user answers an Open Question, move the answer into the relevant Decisions or Confirmed Decisions section and remove it from Open Questions.
-- If an Open Question is non-blocking or deferred, label it as non-blocking/deferred and explain why implementation can safely proceed without it.
-- Treat unresolved `Options`, `Alternatives`, `Decision Needed`, `To Clarify`, `TBD`, or `choose one` sections as blocking Open Questions when they affect the current feature or phase.
-- An implementation-ready plan should have `Open Questions: None` or only explicitly non-blocking/deferred items.
-
-## Reference Adaptation Matrix
-
-If a reference project is provided, include a matrix that states which reference decisions should be adopted, adapted, reimplemented, rejected, or deferred.
-
-Use this template:
-
-| Reference Area | Reference Design / Behavior | Current Repository State | Decision | Reason |
+| Area | Reference behaviour | Current state | Decision | Reason |
 |---|---|---|---|---|
-| API contract |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
-| Data model |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
-| UI behavior |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
-| Dependency / library |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
-| Security / permission |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
+| API / data / UI / dependency / security |  |  | Adopt / Adapt / Reimplement / Reject / Defer |  |
 
-When the user wants parity with the reference, a conflict between the reference's observed behavior and the current design or an earlier ruling resolves to the reference; record that decision with its evidence in the plan or interface spec.
+`Adopt` only when it fits without changing architecture or approved scope; `Adapt` to follow local conventions; `Reimplement` when the behaviour is needed but the code must not be copied; `Reject` on conflict; `Defer` outside the phase.
 
-Use `Adopt` only when the reference behavior fits the repository without changing project architecture or user-approved scope. Use `Adapt` when the idea is useful but must follow repository conventions. Use `Reimplement` when the behavior is needed but the reference code or design should not be copied. Use `Reject` when it conflicts with the repository. Use `Defer` when it is useful but outside the current phase.
+## Handoff
 
-## Output Format
-
-When no clarification is needed, respond with:
-
-- Product Summary
-- Current Understanding
-- Confirmed Decision Ledger
-- Assumptions
-- Scope
-- Current Project Findings
-- Domain Language / ADR Impact
-- Reference Project Findings, if relevant
-- Reference Adaptation Matrix, if relevant
-- Production Planning Gates
-- Configuration / Environment Variables, if relevant
-- Implementation Simplicity Constraints
-- Code Style Constraints
-- Architecture Contract
-- Stable Acceptance Criteria
-- Technical Design
-- Implementation Phases With Boundaries And Prerequisites
-- Files / Docs to Create or Update
-- Definition of Done
-- Risks
-- Open Questions, which must be `None` or explicitly non-blocking/deferred for implementation-ready plans
-- Recommended Next Step
-
-If unresolved blocking questions remain, do not present the plan as final.
+- Large or risky plans go to `$cross-review` (read-only plan review) before implementation. `APPLY-REVIEW-FIX` → `$apply-review-fix`, then re-review. `REJECT` → resolve the decisions first.
+- `$feature-implementer` starts only when blocking questions are resolved, the review says `ACCEPT`, and blocking findings are `CLOSED`.
+- Material scope, boundary, or acceptance changes after review need a new user decision and another review.
+- Record durable, verified project facts or pitfalls in the `AGENTS.md` knowledge ledger (fact, action, evidence; no secrets or history).

@@ -448,7 +448,8 @@ Validation 与 Cleanup，返回 READY_FOR_REVIEW。
   使用完整循环；
 - `module-introduction` 通常位于实现接受之后，不用于代替尚未完成的实现。
 - 使用 `cli-agent-orchestration` 时按三档执行：小（单行修复、按既有裁定对齐测试、删死代码）由编排者直接改或合并成一次派工；中（单模块内有契约的修复/功能）裁定 → 派工 → 逻辑审查 → 合并；大（新模块、跨模块或高风险）走完整循环；
-- 全量测试每批只跑一次，修复后只重跑失败目标，合并前再跑一次全量。
+- 全量测试每批只跑一次，修复后只重跑失败目标，合并前再跑一次全量；
+- 编排模式：`cli-agent-orchestration` 是入口，按阶段显式加载 planner / implementer / review / fix；这些技能在编排模式下把裁定、验收和提交交给编排者，`cross-review` 只给出发现和逐条结论。四个流程技能各自带 "Size it" 说明，小改动跳过完整仪式。
 
 ### 5. 安装与本地链接
 
@@ -903,6 +904,12 @@ orchestrator edit or one batched dispatch; medium (a contracted fix or feature i
 one module) is ruling → dispatch → logic review → merge; large (new module,
 cross-module, risky) uses the full loop. Run the full suite once per batch, rerun
 only failed targets after a fix, and run it once more before the final merge.
+
+In orchestrated mode `cli-agent-orchestration` is the entry point and loads the
+planner, implementer, review, and fix skills explicitly per step; those skills
+then defer rulings, acceptance, and commits to the orchestrator, and
+`cross-review` returns findings and per-rule verdicts only. Each workflow skill
+has a "Size it" note so small changes skip the full ceremony.
 
 ### 5. Installation and Linking
 

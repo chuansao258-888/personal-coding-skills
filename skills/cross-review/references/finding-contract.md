@@ -50,7 +50,7 @@ Validation
 - Tests to add/update and commands or manual checks to run.
 
 Cleanup
-- Obsolete code, prompt text, config, tests, comments, or TODOs to remove.
+- Obsolete code, text, config, tests, comments, or TODOs to remove.
 
 Regression Risk
 - Likely regression and the test/guard that contains it.
@@ -90,7 +90,7 @@ Cleanup
 
 Drift
 - [x] Fix does not expand the current phase or user goal.
-- [x] Fix adds no unapproved feature, provider, or LLM call.
+- [x] Fix adds no unapproved feature, dependency, or external service call.
 - [x] Fix does not modify unrelated modules.
 
 Plan
